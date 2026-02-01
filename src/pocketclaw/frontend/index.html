@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PocketClaw</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🦀</text></svg>"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"
+    ></script>
+  </head>
+  <body x-data="app()" x-init="init()">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo"><span>🦀</span> PocketClaw</div>
+
+      <!-- Tools Section -->
+      <nav class="nav-section">
+        <h3 class="nav-title">Tools</h3>
+        <button class="nav-item" @click="runTool('fetch')">
+          <span>📁</span> Files
+        </button>
+        <button class="nav-item" @click="runTool('screenshot')">
+          <span>📸</span> Screenshot
+        </button>
+        <button class="nav-item danger" @click="runTool('panic')">
+          <span>🛑</span> Panic Button
+        </button>
+      </nav>
+
+      <!-- Config Section -->
+      <nav class="nav-section">
+        <h3 class="nav-title">Config</h3>
+        <button class="nav-item" @click="showSettings = true">
+          <span>⚙️</span> Settings
+        </button>
+      </nav>
+
+      <!-- System Status Widget -->
+      <div class="status-widget">
+        <h4 class="status-title">System Status</h4>
+        <div class="status-grid">
+          <div class="status-item">
+            <span class="status-label">CPU</span>
+            <span class="status-value" x-text="typeof status.cpu === 'number' ? status.cpu + '%' : status.cpu"></span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">RAM</span>
+            <span class="status-value" x-text="typeof status.ram === 'number' ? status.ram + '%' : status.ram"></span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Disk</span>
+            <span class="status-value" x-text="typeof status.disk === 'number' ? status.disk + '%' : status.disk"></span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Bat</span>
+            <span class="status-value" x-text="typeof status.battery === 'number' ? status.battery + '%' : status.battery"></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="view-toggle">
+          <button
+            class="view-btn"
+            :class="{ active: view === 'chat' }"
+            @click="view = 'chat'"
+          >
+            Chat
+          </button>
+          <button
+            class="view-btn"
+            :class="{ active: view === 'terminal' }"
+            @click="view = 'terminal'"
+          >
+            Terminal
+          </button>
+        </div>
+
+        <div class="agent-toggle">
+          <span class="agent-label">Agent Mode</span>
+          <label class="switch">
+            <input
+              type="checkbox"
+              x-model="agentActive"
+              @change="toggleAgent()"
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </header>
+
+      <!-- Chat View -->
+      <div class="chat-container" x-show="view === 'chat'">
+        <div class="messages" x-ref="messages">
+          <template x-for="(msg, index) in messages" :key="index">
+            <div class="message" :class="msg.role">
+              <div
+                class="message-content"
+                x-html="formatMessage(msg.content)"
+              ></div>
+              <div class="message-header">
+                <span
+                  class="message-author"
+                  x-text="msg.role === 'user' ? 'You' : 'PocketClaw'"
+                ></span>
+                <span class="message-time" x-text="msg.time"></span>
+              </div>
+            </div>
+          </template>
+
+          <!-- Streaming indicator -->
+          <div class="message assistant" x-show="isStreaming">
+            <div class="message-content">
+              <span x-text="streamingContent"></span>
+              <span class="typing-indicator">▌</span>
+            </div>
+            <div class="message-header">
+              <span class="message-author">PocketClaw</span>
+              <span class="message-time" x-text="currentTime()"></span>
+            </div>
+          </div>
+        </div>
+
+        <form class="input-area" @submit.prevent="sendMessage()">
+          <input
+            type="text"
+            class="chat-input"
+            placeholder="Type a message..."
+            x-model="inputText"
+            :disabled="isStreaming"
+          />
+          <button
+            type="submit"
+            class="send-btn"
+            :disabled="!inputText.trim() || isStreaming"
+          >
+            <span>↑</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Terminal View -->
+      <div class="terminal-container" x-show="view === 'terminal'">
+        <div class="terminal-output" x-ref="terminal">
+          <template x-for="(log, index) in logs" :key="index">
+            <div class="term-line" :class="'term-' + log.level">
+              <span class="term-time" x-text="log.time"></span>
+              <span x-text="log.message"></span>
+            </div>
+          </template>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div
+      class="modal-overlay"
+      x-show="showSettings"
+      x-transition.opacity
+      @click.self="showSettings = false"
+    >
+      <div class="modal" @click.stop>
+        <div class="modal-header">
+          <h2>Settings</h2>
+          <button class="close-btn" @click="showSettings = false">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Agent Backend</label>
+            <select x-model="settings.agentBackend" @change="saveSettings()">
+              <option value="open_interpreter">Open Interpreter</option>
+              <option value="claude_code">Claude Code</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>LLM Provider</label>
+            <select x-model="settings.llmProvider" @change="saveSettings()">
+              <option value="auto">Auto</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="openai">OpenAI</option>
+              <option value="ollama">Ollama</option>
+            </select>
+          </div>
+          <hr />
+          <h3>API Keys</h3>
+          <div class="form-group">
+            <label>Anthropic API Key</label>
+            <div class="input-group">
+              <input
+                type="password"
+                x-model="apiKeys.anthropic"
+                placeholder="sk-ant-..."
+              />
+              <button class="btn-sm" @click="saveApiKey('anthropic')">
+                Save
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>OpenAI API Key</label>
+            <div class="input-group">
+              <input
+                type="password"
+                x-model="apiKeys.openai"
+                placeholder="sk-..."
+              />
+              <button class="btn-sm" @click="saveApiKey('openai')">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div
+      class="modal-overlay"
+      x-show="showScreenshot"
+      x-transition.opacity
+      @click.self="showScreenshot = false"
+    >
+      <div class="modal modal-lg" @click.stop>
+        <div class="modal-header">
+          <h2>Screenshot</h2>
+          <button class="close-btn" @click="showScreenshot = false">×</button>
+        </div>
+        <div class="modal-body">
+          <img
+            :src="screenshotSrc"
+            alt="Screenshot"
+            class="screenshot-preview"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" x-ref="toasts"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/websocket.js"></script>
+    <script src="/static/js/tools.js"></script>
+    <script src="/static/js/app.js"></script>
+  </body>
+</html>
