@@ -168,6 +168,12 @@ class AgentLoop:
             current_response_text = ""
             current_tool_calls = []
 
+            # Emit Thinking Event
+            await self.bus.publish_system(SystemEvent(
+                event_type="thinking",
+                data={"session_key": message.session_key}
+            ))
+
             # Streaming LLM response
             async with self.client.messages.stream(
                 model=self.settings.anthropic_model,
@@ -245,12 +251,6 @@ class AgentLoop:
                             "tool_use_id": block.id,
                             "content": result
                         })
-                        
-                        # Notify tool usage (system event)
-                        await self.bus.publish_system(SystemEvent(
-                            event_type="tool_use",
-                            data={"name": block.name, "input": block.input, "result": result}
-                        ))
 
             # Recurse if there were tools
             if tool_results:
@@ -297,11 +297,31 @@ class AgentLoop:
     async def _execute_tool(self, name: str, params: dict) -> str:
         """Execute a tool via registry."""
         logger.info(f"🔧 Executing {name} with {params}")
+        
+        # Emit tool_start
+        await self.bus.publish_system(SystemEvent(
+            event_type="tool_start",
+            data={"name": name, "params": params}
+        ))
+        
         try:
             result = await self.tools.execute(name, **params)
+            
+            # Emit tool_result
+            await self.bus.publish_system(SystemEvent(
+                event_type="tool_result",
+                data={"name": name, "params": params, "result": result, "status": "success"}
+            ))
             return result
         except Exception as e:
-            return f"Error executing {name}: {str(e)}"
+            error_msg = f"Error executing {name}: {str(e)}"
+            
+            # Emit tool_result (error)
+            await self.bus.publish_system(SystemEvent(
+                event_type="tool_result",
+                data={"name": name, "params": params, "result": error_msg, "status": "error"}
+            ))
+            return error_msg
 
     async def _send_response(self, original: InboundMessage, content: str) -> None:
         """Helper to send a simple text response."""

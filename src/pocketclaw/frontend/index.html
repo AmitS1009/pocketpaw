@@ -93,6 +93,24 @@
           <span>Panic</span>
         </button>
       </nav>
+      </nav>
+
+      <!-- Transparency Section -->
+      <nav class="nav-section">
+        <h3 class="nav-title">Brain</h3>
+        <button class="nav-item flex items-center gap-3" @click="openIdentity()">
+          <i data-lucide="fingerprint" class="w-5 h-5"></i>
+          <span>Identity</span>
+        </button>
+        <button class="nav-item flex items-center gap-3" @click="openMemory()">
+          <i data-lucide="brain-circuit" class="w-5 h-5"></i>
+          <span>Memory</span>
+        </button>
+        <button class="nav-item flex items-center gap-3" @click="openAudit()">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+          <span>Audit Log</span>
+        </button>
+      </nav>
 
       <!-- Config Section -->
       <nav class="nav-section">
@@ -149,6 +167,13 @@
             @click="view = 'chat'"
           >
             Chat
+          </button>
+          <button
+            class="view-btn"
+            :class="{ active: view === 'activity' }"
+            @click="view = 'activity'"
+          >
+            Activity
           </button>
           <button
             class="view-btn"
@@ -226,6 +251,18 @@
             <i data-lucide="arrow-up" class="w-4 h-4"></i>
           </button>
         </form>
+      </div>
+
+      <!-- Activity View -->
+      <div class="terminal-container" x-show="view === 'activity'">
+        <div class="terminal-output" x-ref="activityLog">
+          <template x-for="(log, index) in activityLog" :key="index">
+            <div class="term-line" :class="'term-' + log.level">
+              <span class="term-time" x-text="log.time"></span>
+              <span x-html="log.message"></span>
+            </div>
+          </template>
+        </div>
       </div>
 
       <!-- Terminal View -->
@@ -722,6 +759,105 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Identity Modal -->
+    <div class="modal-overlay" x-show="showIdentity" x-transition.opacity @click.self="showIdentity = false">
+        <div class="modal modal-lg" @click.stop>
+            <div class="modal-header">
+                <h2>Agent Identity</h2>
+                <button class="close-btn" @click="showIdentity = false"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="modal-body">
+                <div x-show="identityLoading" class="p-8 text-center text-white/50"><i data-lucide="loader-2" class="animate-spin inline mr-2"></i> Loading identity...</div>
+                <div x-show="!identityLoading" class="flex flex-col gap-4">
+                    <div class="glass-dark p-4 rounded-xl">
+                        <h3 class="text-accent mb-2">Primary Directive (IDENTITY.md)</h3>
+                        <pre class="text-xs text-white/70 whitespace-pre-wrap font-mono" x-text="identityData.identity_file"></pre>
+                    </div>
+                     <div class="glass-dark p-4 rounded-xl">
+                        <h3 class="text-accent mb-2">Soul & Personality (SOUL.md)</h3>
+                        <pre class="text-xs text-white/70 whitespace-pre-wrap font-mono" x-text="identityData.soul_file"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memory Modal -->
+    <div class="modal-overlay" x-show="showMemory" x-transition.opacity @click.self="showMemory = false">
+        <div class="modal modal-lg" @click.stop>
+            <div class="modal-header">
+                <h2>Memory Banks</h2>
+                <button class="close-btn" @click="showMemory = false"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="modal-body">
+                 <div class="flex gap-2 mb-4">
+                    <button class="view-btn" :class="{ active: memoryTab === 'session' }" @click="memoryTab = 'session'">Session</button>
+                    <button class="view-btn" :class="{ active: memoryTab === 'long_term' }" @click="memoryTab = 'long_term'">Long Term</button>
+                 </div>
+                 
+                 <div x-show="memoryTab === 'session'" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto">
+                    <template x-for="item in sessionMemory" :key="item.content">
+                        <div class="glass-dark p-3 rounded-lg border-l-2" :class="item.role === 'user' ? 'border-accent' : 'border-success'">
+                            <div class="flex justify-between text-xs text-white/40 mb-1">
+                                <span x-text="item.role.toUpperCase()"></span>
+                            </div>
+                            <div class="text-sm text-white/80 whitespace-pre-wrap" x-text="item.content"></div>
+                        </div>
+                    </template>
+                 </div>
+
+                 <div x-show="memoryTab === 'long_term'" class="flex flex-col gap-3 max-h-[400px] overflow-y-auto">
+                    <template x-for="item in longTermMemory" :key="item.timestamp">
+                        <div class="glass-dark p-3 rounded-lg border-l-2 border-warning">
+                            <div class="flex justify-between text-xs text-white/40 mb-1">
+                                <span x-text="new Date(item.timestamp).toLocaleString()"></span>
+                                <div class="flex gap-1">
+                                    <template x-for="tag in item.tags">
+                                        <span class="bg-white/10 px-1 rounded" x-text="tag"></span>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="text-sm text-white/80" x-text="item.content"></div>
+                        </div>
+                    </template>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Log Modal -->
+    <div class="modal-overlay" x-show="showAudit" x-transition.opacity @click.self="showAudit = false">
+        <div class="modal modal-lg" @click.stop style="width: 800px;">
+            <div class="modal-header">
+                <h2>Audit Log</h2>
+                <button class="close-btn" @click="showAudit = false"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="modal-body">
+                <div x-show="auditLoading" class="p-4 text-center"><i data-lucide="loader-2" class="animate-spin"></i></div>
+                <div class="flex flex-col gap-2 max-h-[500px] overflow-y-auto font-mono text-xs">
+                    <template x-for="log in auditLogs" :key="log.id">
+                        <div class="p-2 rounded border-l-4 bg-white/5" 
+                             :class="{
+                                'border-info': log.severity === 'info',
+                                'border-warning': log.severity === 'warning',
+                                'border-danger': log.severity === 'critical' || log.severity === 'alert'
+                             }">
+                            <div class="flex justify-between text-white/50 mb-1">
+                                <span x-text="new Date(log.timestamp).toLocaleTimeString()"></span>
+                                <span x-text="log.severity.toUpperCase()" :class="log.severity === 'critical' ? 'text-danger' : ''"></span>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="bg-white/10 px-1 rounded text-accent" x-text="log.action"></span>
+                                <span class="text-white/90" x-text="log.target"></span>
+                            </div>
+                            <div class="mt-1 text-white/60 truncate" x-text="JSON.stringify(log.context)"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Container -->

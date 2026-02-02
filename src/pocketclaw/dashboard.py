@@ -27,7 +27,13 @@ from pocketclaw.skills import get_skill_loader, SkillExecutor
 from pocketclaw.bus import get_message_bus
 from pocketclaw.bus.adapters.websocket_adapter import WebSocketAdapter
 from pocketclaw.agents.loop import AgentLoop
+from pocketclaw.agents.loop import AgentLoop
 import uuid
+# Transparency Imports
+from pocketclaw.memory import get_memory_manager, MemoryType
+from pocketclaw.security import get_audit_logger
+from pocketclaw.bootstrap import DefaultBootstrapProvider
+
 
 logger = logging.getLogger(__name__)
 
@@ -144,10 +150,11 @@ async def websocket_endpoint(websocket: WebSocket):
     chat_id = str(uuid.uuid4())
     await ws_adapter.register_connection(websocket, chat_id)
 
-    # Send welcome notification
+    # Send welcome notification with session info
     await websocket.send_json({
-        "type": "notification",
-        "content": "👋 Connected to PocketPaw (Nanobot V2)"
+        "type": "connection_info",
+        "content": "👋 Connected to PocketPaw (Nanobot V2)",
+        "id": chat_id
     })
 
     # Load settings
@@ -450,10 +457,72 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
     finally:
-        # Remove connection from tracking
         if websocket in active_connections:
             active_connections.remove(websocket)
         await ws_adapter.unregister_connection(chat_id)
+
+
+# ==================== Transparency APIs ====================
+
+@app.get("/api/identity")
+async def get_identity():
+    """Get agent identity context."""
+    provider = DefaultBootstrapProvider(get_settings().config_path.parent)
+    context = provider.load_context()
+    return {
+        "identity_file": context.identity,
+        "soul_file": context.soul,
+        "tools_file": context.tools,
+        "user_file": context.user,
+    }
+
+@app.get("/api/memory/session")
+async def get_session_memory(id: str = "", limit: int = 50):
+    """Get session memory."""
+    if not id:
+        return []
+    manager = get_memory_manager()
+    return await manager.get_session_history(id, limit=limit)
+
+@app.get("/api/memory/long_term")
+async def get_long_term_memory(limit: int = 50):
+    """Get long-term memories."""
+    manager = get_memory_manager()
+    # Access store directly for filtered query, or use get_by_type if exposed
+    # Manager doesn't expose get_by_type publically in facade (it used _store.get_by_type in get_context_for_agent)
+    # So we use filtered search or we should expose it.
+    # For now, let's use _store hack or add method to manager?
+    # I'll rely on a new Manager method or _store for now to keep it simple.
+    items = await manager._store.get_by_type(MemoryType.LONG_TERM, limit=limit)
+    return [
+        {"content": item.content, "timestamp": item.timestamp.isoformat(), "tags": item.tags}
+        for item in items
+    ]
+
+@app.get("/api/audit")
+async def get_audit_log(limit: int = 50):
+    """Get audit logs."""
+    logger = get_audit_logger()
+    if not logger.log_path.exists():
+        return []
+    
+    logs = []
+    try:
+        # Read last N lines efficiently-ish
+        with open(logger.log_path, "r") as f:
+            lines = f.readlines()
+            
+        for line in reversed(lines):
+            if len(logs) >= limit: break
+            try:
+                import json
+                logs.append(json.loads(line))
+            except: pass
+    except Exception as e:
+        return {"error": str(e)}
+        
+    return logs
+
 
 
 async def handle_tool(websocket: WebSocket, tool: str, settings: Settings, data: dict):

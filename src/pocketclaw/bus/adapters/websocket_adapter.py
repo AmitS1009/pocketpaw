@@ -9,7 +9,9 @@ import json
 import logging
 
 from pocketclaw.bus.adapters import BaseChannelAdapter
-from pocketclaw.bus.events import Channel, InboundMessage, OutboundMessage
+from pocketclaw.bus.events import Channel, InboundMessage, OutboundMessage, SystemEvent
+from pocketclaw.bus.queue import MessageBus
+from dataclasses import asdict
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,23 @@ class WebSocketAdapter(BaseChannelAdapter):
     @property
     def channel(self) -> Channel:
         return Channel.WEBSOCKET
+
+    async def start(self, bus: MessageBus) -> None:
+        """Start adapter and subscribe to both outbound and system events."""
+        await super().start(bus)
+        # Subscribe to system events (thinking, tool usage, etc.)
+        bus.subscribe_system(self.on_system_event)
+        logger.info("🔌 WebSocket Adapter subscribed to System Events")
+
+    async def on_system_event(self, event: SystemEvent) -> None:
+        """Handle system event by broadcasting to all clients."""
+        # Convert dataclass to dict
+        event_dict = asdict(event)
+        
+        # Broadcast to all connected clients
+        # In multi-user system, we'd filter by session_key/chat_id if available in data
+        # For now, broadcast to all (dashboard is single view)
+        await self.broadcast(event_dict, msg_type="system_event")
 
     async def register_connection(self, websocket: WebSocket, chat_id: str) -> None:
         """Register a new WebSocket connection."""
@@ -99,7 +118,9 @@ class WebSocketAdapter(BaseChannelAdapter):
         except Exception:
             pass  # Connection closed
 
-    async def broadcast(self, content: str, msg_type: str = "notification") -> None:
+            pass  # Connection closed
+
+    async def broadcast(self, content: Any, msg_type: str = "notification") -> None:
         """Broadcast to all connected clients."""
         for ws in self._connections.values():
             try:

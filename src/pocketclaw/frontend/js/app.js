@@ -43,6 +43,25 @@ function app() {
         skills: [],
         skillsLoading: false,
 
+        // Transparency Panel state
+        showIdentity: false,
+        identityLoading: false,
+        identityData: {},
+        
+        showMemory: false,
+        memoryTab: 'session',
+        sessionMemory: [],
+        longTermMemory: [],
+        
+        showAudit: false,
+        auditLoading: false,
+        auditLogs: [],
+        
+        activityLog: [],
+        sessionId: null,
+
+        // File browser state
+
         // File browser state
         filePath: '~',
         files: [],
@@ -165,7 +184,13 @@ function app() {
             socket.on('skills', (data) => this.handleSkills(data));
             socket.on('skill_started', (data) => this.handleSkillStarted(data));
             socket.on('skill_completed', (data) => this.handleSkillCompleted(data));
+            socket.on('skill_received', (data) => console.log('Skill received', data));
             socket.on('skill_error', (data) => this.handleSkillError(data));
+
+            // Transparency handlers
+            socket.on('connection_info', (data) => this.handleConnectionInfo(data));
+            socket.on('system_event', (data) => this.handleSystemEvent(data));
+
         },
 
         /**
@@ -929,6 +954,102 @@ function app() {
                 'open_interpreter': 'Standalone agent. Works with local LLMs (Ollama) or cloud APIs.'
             };
             return descriptions[backend] || '';
+        },
+
+        // ==================== Transparency ====================
+
+        /**
+         * Handle connection info (capture session ID)
+         */
+        handleConnectionInfo(data) {
+            this.handleNotification(data);
+            if (data.id) {
+                this.sessionId = data.id;
+                this.log(`Session ID: ${data.id}`, 'info');
+            }
+        },
+
+        /**
+         * Handle system event (Activity Log)
+         */
+        handleSystemEvent(data) {
+           const time = Tools.formatTime();
+           let message = '';
+           let level = 'info';
+
+           if (data.event_type === 'thinking') {
+               message = `<span class="text-accent animate-pulse">Thinking...</span>`;
+           } else if (data.event_type === 'tool_start') {
+               message = `🔧 <b>${data.data.name}</b> <span class="text-white/50">${JSON.stringify(data.data.params)}</span>`;
+               level = 'warning';
+           } else if (data.event_type === 'tool_result') {
+               const isError = data.data.status === 'error';
+               level = isError ? 'error' : 'success';
+               message = `${isError ? '❌' : '✅'} <b>${data.data.name}</b> result: <span class="text-white/50">${String(data.data.result).substring(0, 50)} ${(String(data.data.result).length > 50) ? '...' : ''}</span>`;
+           } else {
+               message = `Unknown event: ${data.event_type}`;
+           }
+
+           this.activityLog.push({ time, message, level });
+           
+           // Auto-scroll activity log
+           this.$nextTick(() => {
+               const term = this.$refs.activityLog;
+               if (term) term.scrollTop = term.scrollHeight;
+           });
+        },
+
+        openIdentity() {
+            this.showIdentity = true;
+            this.identityLoading = true;
+            fetch('/api/identity')
+                .then(r => r.json())
+                .then(data => {
+                    this.identityData = data;
+                    this.identityLoading = false;
+                })
+                .catch(e => {
+                    this.showToast('Failed to load identity', 'error');
+                    this.identityLoading = false;
+                });
+        },
+
+        openMemory() {
+            this.showMemory = true;
+            this.loadSessionMemory();
+            this.loadLongTermMemory();
+        },
+
+        loadSessionMemory() {
+            if (!this.sessionId) return;
+            fetch(`/api/memory/session?id=${this.sessionId}`)
+                .then(r => r.json())
+                .then(data => {
+                    this.sessionMemory = data;
+                });
+        },
+
+        loadLongTermMemory() {
+            fetch('/api/memory/long_term')
+                .then(r => r.json())
+                .then(data => {
+                    this.longTermMemory = data;
+                });
+        },
+
+        openAudit() {
+            this.showAudit = true;
+            this.auditLoading = true;
+            fetch('/api/audit')
+                .then(r => r.json())
+                .then(data => {
+                    this.auditLogs = data;
+                    this.auditLoading = false;
+                })
+                .catch(e => {
+                     this.showToast('Failed to load audit logs', 'error');
+                     this.auditLoading = false;
+                });
         },
 
         /**
