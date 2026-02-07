@@ -17,6 +17,7 @@ from pocketclaw.config import Settings
 
 class MockTool(BaseTool):
     """Mock tool for testing registry."""
+
     @property
     def name(self) -> str:
         return "mock_tool"
@@ -36,7 +37,7 @@ class TestToolRegistry:
         registry = ToolRegistry()
         tool = MockTool()
         registry.register(tool)
-        
+
         assert registry.has("mock_tool")
         assert registry.get("mock_tool") == tool
         assert "mock_tool" in registry.tool_names
@@ -46,14 +47,14 @@ class TestToolRegistry:
         tool = MockTool()
         registry.register(tool)
         registry.unregister("mock_tool")
-        
+
         assert not registry.has("mock_tool")
 
     def test_get_definitions(self):
         registry = ToolRegistry()
         tool = MockTool()
         registry.register(tool)
-        
+
         defs = registry.get_definitions("openai")
         assert len(defs) == 1
         assert defs[0]["function"]["name"] == "mock_tool"
@@ -63,7 +64,7 @@ class TestToolRegistry:
         registry = ToolRegistry()
         tool = MockTool()
         registry.register(tool)
-        
+
         result = await registry.execute("mock_tool", param="test")
         assert result == "Executed with test"
 
@@ -80,7 +81,11 @@ class TestShellTool:
     @pytest.mark.asyncio
     async def test_execute_simple(self):
         tool = ShellTool()
-        result = await tool.execute_command("echo 'hello'") if hasattr(tool, 'execute_command') else await tool.execute(command="echo 'hello'")
+        result = (
+            await tool.execute_command("echo 'hello'")
+            if hasattr(tool, "execute_command")
+            else await tool.execute(command="echo 'hello'")
+        )
         assert "hello" in result
 
     @pytest.mark.asyncio
@@ -109,8 +114,10 @@ def temp_jail():
 def mock_settings(temp_jail):
     """Mock settings with custom file jail."""
     settings = Settings(file_jail_path=temp_jail)
-    with patch("pocketclaw.tools.builtin.filesystem.get_settings", return_value=settings), \
-         patch("pocketclaw.tools.builtin.shell.get_settings", return_value=settings):
+    with (
+        patch("pocketclaw.tools.builtin.filesystem.get_settings", return_value=settings),
+        patch("pocketclaw.tools.builtin.shell.get_settings", return_value=settings),
+    ):
         yield settings
 
 
@@ -121,12 +128,12 @@ class TestFilesystemTools:
     async def test_write_and_read(self, temp_jail, mock_settings):
         write_tool = WriteFileTool()
         read_tool = ReadFileTool()
-        
+
         # Write
         file_path = str(temp_jail / "test.txt")
         result = await write_tool.execute(path=file_path, content="Hello World")
         assert "Successfully wrote" in result
-        
+
         # Read
         content = await read_tool.execute(path=file_path)
         assert content == "Hello World"
@@ -134,16 +141,16 @@ class TestFilesystemTools:
     @pytest.mark.asyncio
     async def test_jail_break_attempt(self, temp_jail, mock_settings):
         read_tool = ReadFileTool()
-        
+
         # Try to read outside jail
         outside = str(temp_jail.parent / "secret.txt")
         result = await read_tool.execute(path=outside)
         if "Access denied" not in result:
-             # Depending on how resolve works, it might be same dir if parent is tmp
-             # Let's try explicit relative path
-             outside = str(temp_jail / "../secret.txt")
-             result = await read_tool.execute(path=outside)
-        
+            # Depending on how resolve works, it might be same dir if parent is tmp
+            # Let's try explicit relative path
+            outside = str(temp_jail / "../secret.txt")
+            result = await read_tool.execute(path=outside)
+
         # It's possible for temp dir to be weird, but let's check basic protection
         # If result is "File not found" it might mean it resolved but didn't error on jail
         # We want explicit jail error
@@ -153,11 +160,11 @@ class TestFilesystemTools:
     async def test_list_dir(self, temp_jail, mock_settings):
         list_tool = ListDirTool()
         write_tool = WriteFileTool()
-        
+
         # Create some files
         await write_tool.execute(path=str(temp_jail / "a.txt"), content="a")
         await write_tool.execute(path=str(temp_jail / "b.txt"), content="b")
-        
+
         # List
         result = await list_tool.execute(path=str(temp_jail))
         assert "a.txt" in result

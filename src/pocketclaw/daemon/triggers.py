@@ -166,9 +166,7 @@ class TriggerEngine:
             )
 
             self._jobs[intention_id] = job_id
-            logger.info(
-                f"Added cron trigger for '{intention['name']}': {schedule}"
-            )
+            logger.info(f"Added cron trigger for '{intention['name']}': {schedule}")
             return True
 
         except Exception as e:
@@ -247,6 +245,7 @@ class TriggerEngine:
         """
         if self.callback:
             import asyncio
+
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():

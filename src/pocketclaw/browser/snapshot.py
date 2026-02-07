@@ -63,9 +63,20 @@ class AccessibilityNode:
         # Extract known properties
         properties: dict[str, Any] = {}
         property_keys = [
-            "level", "focused", "disabled", "checked", "expanded",
-            "selected", "pressed", "required", "readonly", "hidden",
-            "type", "value", "valuetext", "description"
+            "level",
+            "focused",
+            "disabled",
+            "checked",
+            "expanded",
+            "selected",
+            "pressed",
+            "required",
+            "readonly",
+            "hidden",
+            "type",
+            "value",
+            "valuetext",
+            "description",
         ]
         for key in property_keys:
             if key in data:
@@ -76,12 +87,7 @@ class AccessibilityNode:
         for child_data in data.get("children", []):
             children.append(cls.from_playwright_dict(child_data))
 
-        return cls(
-            role=role,
-            name=name,
-            children=children,
-            properties=properties
-        )
+        return cls(role=role, name=name, children=children, properties=properties)
 
 
 class SnapshotGenerator:
@@ -94,15 +100,27 @@ class SnapshotGenerator:
 
     # Roles that represent interactive elements (get refs)
     INTERACTIVE_ROLES = {
-        "button", "link", "textbox", "checkbox", "radio", "combobox",
-        "listbox", "option", "menuitem", "menuitemcheckbox", "menuitemradio",
-        "switch", "slider", "spinbutton", "searchbox", "tab", "treeitem"
+        "button",
+        "link",
+        "textbox",
+        "checkbox",
+        "radio",
+        "combobox",
+        "listbox",
+        "option",
+        "menuitem",
+        "menuitemcheckbox",
+        "menuitemradio",
+        "switch",
+        "slider",
+        "spinbutton",
+        "searchbox",
+        "tab",
+        "treeitem",
     }
 
     # Roles to skip entirely (not meaningful for LLM)
-    SKIP_ROLES = {
-        "none", "presentation", "generic"
-    }
+    SKIP_ROLES = {"none", "presentation", "generic"}
 
     # Maximum length for element names before truncation
     MAX_NAME_LENGTH = 100
@@ -112,10 +130,7 @@ class SnapshotGenerator:
         self._lines: list[str] = []
 
     def generate(
-        self,
-        tree: AccessibilityNode,
-        title: str | None = None,
-        url: str | None = None
+        self, tree: AccessibilityNode, title: str | None = None, url: str | None = None
     ) -> tuple[str, RefMap]:
         """Generate a semantic snapshot from an accessibility tree.
 
@@ -199,7 +214,7 @@ class SnapshotGenerator:
     def _truncate_name(self, name: str) -> str:
         """Truncate long names with ellipsis."""
         if len(name) > self.MAX_NAME_LENGTH:
-            return name[:self.MAX_NAME_LENGTH - 3] + "..."
+            return name[: self.MAX_NAME_LENGTH - 3] + "..."
         return name
 
     def _generate_selector(self, node: AccessibilityNode) -> str:
@@ -208,7 +223,7 @@ class SnapshotGenerator:
         We use ARIA role and name attributes which Playwright can query.
         Format: role=<role>[name="<name>"]
         """
-        selector_parts = [f'role={node.role}']
+        selector_parts = [f"role={node.role}"]
         if node.name:
             # Escape quotes in name
             escaped_name = node.name.replace('"', '\\"')

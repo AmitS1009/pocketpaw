@@ -20,7 +20,7 @@ class DefaultBootstrapProvider(BootstrapProviderProtocol):
     def __init__(self, base_path: Path | None = None):
         self.base_path = base_path or (get_config_dir() / "identity")
         self.base_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Initialize default files if they don't exist
         self._ensure_defaults()
 

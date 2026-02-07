@@ -63,32 +63,32 @@ class BrowserTool(BaseTool):
                         "scroll",
                         "snapshot",
                         "screenshot",
-                        "close"
-                    ]
+                        "close",
+                    ],
                 },
                 "url": {
                     "type": "string",
-                    "description": "URL to navigate to (required for 'navigate' action)"
+                    "description": "URL to navigate to (required for 'navigate' action)",
                 },
                 "ref": {
                     "type": "integer",
-                    "description": "Element reference number from snapshot (required for 'click' and 'type' actions)"
+                    "description": "Element reference number from snapshot (required for 'click' and 'type' actions)",
                 },
                 "text": {
                     "type": "string",
-                    "description": "Text to type (required for 'type' action)"
+                    "description": "Text to type (required for 'type' action)",
                 },
                 "direction": {
                     "type": "string",
                     "description": "Scroll direction: 'up' or 'down' (default: 'down')",
-                    "enum": ["up", "down"]
+                    "enum": ["up", "down"],
                 },
                 "session_id": {
                     "type": "string",
-                    "description": "Browser session ID (optional, uses default if not specified)"
-                }
+                    "description": "Browser session ID (optional, uses default if not specified)",
+                },
             },
-            "required": ["action"]
+            "required": ["action"],
         }
 
     async def execute(self, **params: Any) -> str:

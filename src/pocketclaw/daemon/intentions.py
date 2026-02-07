@@ -40,10 +40,7 @@ def load_intentions() -> list[dict]:
 def save_intentions(intentions: list[dict]) -> None:
     """Save intentions to JSON file."""
     path = get_intentions_path()
-    data = {
-        "intentions": intentions,
-        "updated_at": datetime.now().isoformat()
-    }
+    data = {"intentions": intentions, "updated_at": datetime.now().isoformat()}
 
     try:
         with open(path, "w") as f:
@@ -103,7 +100,7 @@ class IntentionStore:
         prompt: str,
         trigger: dict,
         context_sources: Optional[list[str]] = None,
-        enabled: bool = True
+        enabled: bool = True,
     ) -> dict:
         """
         Create a new intention.
@@ -126,7 +123,7 @@ class IntentionStore:
             "context_sources": context_sources or [],
             "enabled": enabled,
             "created_at": datetime.now().isoformat(),
-            "last_run": None
+            "last_run": None,
         }
 
         self.intentions.append(intention)

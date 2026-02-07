@@ -79,7 +79,7 @@ class Mem0MemoryStore:
                         "collection_name": "pocketpaw_memory",
                         "path": str(self._data_path / "qdrant"),
                         "embedding_model_dims": 1536,
-                    }
+                    },
                 },
                 history_db_path=str(self._data_path / "history.db"),
                 version="v1.1",
@@ -90,9 +90,7 @@ class Mem0MemoryStore:
             logger.info(f"Mem0 initialized with data at {self._data_path}")
 
         except ImportError:
-            raise ImportError(
-                "mem0ai package not installed. Install with: pip install mem0ai"
-            )
+            raise ImportError("mem0ai package not installed. Install with: pip install mem0ai")
         except Exception as e:
             logger.error(f"Failed to initialize Mem0: {e}")
             raise
@@ -345,8 +343,11 @@ class Mem0MemoryStore:
             created_at=created_at,
             updated_at=datetime.now(),
             tags=metadata.get("tags", []),
-            metadata={k: v for k, v in metadata.items()
-                     if k not in ("pocketpaw_type", "tags", "created_at", "role")},
+            metadata={
+                k: v
+                for k, v in metadata.items()
+                if k not in ("pocketpaw_type", "tags", "created_at", "role")
+            },
             role=role,
             session_key=metadata.get("session_key"),
         )

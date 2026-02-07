@@ -11,22 +11,22 @@ def get_system_status() -> str:
     # CPU
     cpu_percent = psutil.cpu_percent(interval=0.5)
     cpu_count = psutil.cpu_count()
-    
+
     # Memory
     mem = psutil.virtual_memory()
-    mem_used_gb = mem.used / (1024 ** 3)
-    mem_total_gb = mem.total / (1024 ** 3)
-    
+    mem_used_gb = mem.used / (1024**3)
+    mem_total_gb = mem.total / (1024**3)
+
     # Disk
     disk = psutil.disk_usage("/")
-    disk_used_gb = disk.used / (1024 ** 3)
-    disk_total_gb = disk.total / (1024 ** 3)
-    
+    disk_used_gb = disk.used / (1024**3)
+    disk_total_gb = disk.total / (1024**3)
+
     # Uptime
     boot_time = datetime.fromtimestamp(psutil.boot_time())
     uptime = datetime.now() - boot_time
     uptime_str = str(timedelta(seconds=int(uptime.total_seconds())))
-    
+
     # Battery (if available)
     battery_str = ""
     try:
@@ -37,11 +37,11 @@ def get_system_status() -> str:
                 battery_str += " ⚡"
     except Exception:
         pass
-    
+
     # Platform info
     system = platform.system()
     machine = platform.machine()
-    
+
     return f"""🟢 **System Status**
 
 💻 **{system} ({machine})**

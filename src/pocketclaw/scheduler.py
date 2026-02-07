@@ -40,10 +40,7 @@ def load_reminders() -> list[dict]:
 def save_reminders(reminders: list[dict]) -> None:
     """Save reminders to file."""
     path = get_reminders_path()
-    data = {
-        "reminders": reminders,
-        "updated_at": datetime.now().isoformat()
-    }
+    data = {"reminders": reminders, "updated_at": datetime.now().isoformat()}
     path.write_text(json.dumps(data, indent=2))
 
 
@@ -60,39 +57,36 @@ def parse_natural_time(text: str) -> Optional[datetime]:
     now = datetime.now()
 
     # Pattern: "in X minutes/hours/days"
-    relative_match = re.search(
-        r'in\s+(\d+)\s*(minute|min|hour|hr|day|second|sec)s?',
-        text
-    )
+    relative_match = re.search(r"in\s+(\d+)\s*(minute|min|hour|hr|day|second|sec)s?", text)
     if relative_match:
         amount = int(relative_match.group(1))
         unit = relative_match.group(2)
 
-        if unit in ('minute', 'min'):
+        if unit in ("minute", "min"):
             return now + timedelta(minutes=amount)
-        elif unit in ('hour', 'hr'):
+        elif unit in ("hour", "hr"):
             return now + timedelta(hours=amount)
-        elif unit == 'day':
+        elif unit == "day":
             return now + timedelta(days=amount)
-        elif unit in ('second', 'sec'):
+        elif unit in ("second", "sec"):
             return now + timedelta(seconds=amount)
 
     # Pattern: "at HH:MM" or "at H:MM AM/PM"
-    at_match = re.search(r'at\s+(\d{1,2}):?(\d{2})?\s*(am|pm)?', text)
+    at_match = re.search(r"at\s+(\d{1,2}):?(\d{2})?\s*(am|pm)?", text)
     if at_match:
         hour = int(at_match.group(1))
         minute = int(at_match.group(2) or 0)
         period = at_match.group(3)
 
-        if period == 'pm' and hour < 12:
+        if period == "pm" and hour < 12:
             hour += 12
-        elif period == 'am' and hour == 12:
+        elif period == "am" and hour == 12:
             hour = 0
 
         target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
 
         # Check if "tomorrow" is mentioned
-        if 'tomorrow' in text:
+        if "tomorrow" in text:
             target += timedelta(days=1)
         # If time is in the past today, schedule for tomorrow
         elif target <= now:
@@ -101,7 +95,7 @@ def parse_natural_time(text: str) -> Optional[datetime]:
         return target
 
     # Pattern: "tomorrow" (defaults to 9am)
-    if 'tomorrow' in text and not at_match:
+    if "tomorrow" in text and not at_match:
         return (now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
 
     # Try dateutil parser for other formats
@@ -122,16 +116,16 @@ def extract_reminder_text(message: str) -> str:
     """
     # Remove common patterns
     patterns = [
-        r'^remind\s+me\s+',
-        r'in\s+\d+\s*(minute|min|hour|hr|day|second|sec)s?\s*',
-        r'at\s+\d{1,2}:?\d{0,2}\s*(am|pm)?\s*',
-        r'tomorrow\s*',
-        r'^to\s+',
+        r"^remind\s+me\s+",
+        r"in\s+\d+\s*(minute|min|hour|hr|day|second|sec)s?\s*",
+        r"at\s+\d{1,2}:?\d{0,2}\s*(am|pm)?\s*",
+        r"tomorrow\s*",
+        r"^to\s+",
     ]
 
     text = message.lower()
     for pattern in patterns:
-        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+        text = re.sub(pattern, "", text, flags=re.IGNORECASE)
 
     # Clean up
     text = text.strip()
@@ -209,7 +203,7 @@ class ReminderScheduler:
             trigger=DateTrigger(run_date=trigger_time),
             args=[reminder["id"]],
             id=reminder["id"],
-            replace_existing=True
+            replace_existing=True,
         )
 
     def add_reminder(self, message: str) -> Optional[dict]:
@@ -232,7 +226,7 @@ class ReminderScheduler:
             "text": reminder_text,
             "original": message,
             "trigger_at": trigger_time.isoformat(),
-            "created_at": datetime.now().isoformat()
+            "created_at": datetime.now().isoformat(),
         }
 
         self.reminders.append(reminder)

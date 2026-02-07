@@ -36,10 +36,12 @@ def create_memory_store(
         try:
             # Check if mem0 is actually available before creating store
             import importlib.util
+
             if importlib.util.find_spec("mem0") is None:
                 raise ImportError("mem0ai not installed")
 
             from pocketclaw.memory.mem0_store import Mem0MemoryStore
+
             logger.info("Using Mem0 memory backend (semantic search enabled)")
             return Mem0MemoryStore(
                 user_id=user_id,
@@ -47,7 +49,9 @@ def create_memory_store(
                 use_inference=use_inference,
             )
         except ImportError:
-            logger.warning("mem0ai not installed, falling back to file backend. Install with: pip install mem0ai")
+            logger.warning(
+                "mem0ai not installed, falling back to file backend. Install with: pip install mem0ai"
+            )
             return FileMemoryStore(base_path)
     else:
         logger.info("Using file-based memory backend")
@@ -197,10 +201,7 @@ class MemoryManager:
             List of {"role": "...", "content": "..."} dicts.
         """
         entries = await self._store.get_session(session_key)
-        return [
-            {"role": e.role or "user", "content": e.content}
-            for e in entries[-limit:]
-        ]
+        return [{"role": e.role or "user", "content": e.content} for e in entries[-limit:]]
 
     async def search(
         self,

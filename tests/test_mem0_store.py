@@ -47,6 +47,7 @@ class TestMemoryManagerBackendSelection:
 # Only run Mem0-specific tests if mem0ai is installed
 try:
     from mem0 import Memory
+
     HAS_MEM0 = True
 except ImportError:
     HAS_MEM0 = False
@@ -68,14 +69,14 @@ class TestMem0MemoryStore:
         mock_instance.get.return_value = {
             "id": "test-id-123",
             "memory": "test content",
-            "metadata": {"pocketpaw_type": "long_term", "tags": ["test"]}
+            "metadata": {"pocketpaw_type": "long_term", "tags": ["test"]},
         }
         mock_instance.search.return_value = {
             "results": [
                 {
                     "id": "test-id-123",
                     "memory": "test content",
-                    "metadata": {"pocketpaw_type": "long_term", "tags": ["test"]}
+                    "metadata": {"pocketpaw_type": "long_term", "tags": ["test"]},
                 }
             ]
         }
@@ -84,7 +85,7 @@ class TestMem0MemoryStore:
                 {
                     "id": "test-id-123",
                     "memory": "test content",
-                    "metadata": {"pocketpaw_type": "long_term", "tags": ["test"]}
+                    "metadata": {"pocketpaw_type": "long_term", "tags": ["test"]},
                 }
             ]
         }
@@ -202,7 +203,7 @@ class TestMemoryEntryConversion:
                 "tags": ["test", "example"],
                 "created_at": "2026-02-04T10:00:00",
                 "custom_field": "custom_value",
-            }
+            },
         }
 
         entry = store._mem0_to_entry(mem0_item)
@@ -220,11 +221,7 @@ class TestMemoryEntryConversion:
 
         store = Mem0MemoryStore.__new__(Mem0MemoryStore)
 
-        mem0_item = {
-            "id": "test-id",
-            "memory": "Test content",
-            "metadata": {}
-        }
+        mem0_item = {"id": "test-id", "memory": "Test content", "metadata": {}}
 
         entry = store._mem0_to_entry(mem0_item)
 

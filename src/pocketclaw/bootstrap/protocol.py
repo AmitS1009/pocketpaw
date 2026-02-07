@@ -10,10 +10,11 @@ from typing import Protocol
 @dataclass
 class BootstrapContext:
     """The core identity and context for the agent."""
+
     name: str
     identity: str  # The main system prompt / personality
-    soul: str      # Deeper philosophical core
-    style: str     # Communication style guidelines
+    soul: str  # Deeper philosophical core
+    style: str  # Communication style guidelines
     knowledge: list[str] = field(default_factory=list)  # Key background info
 
     def to_system_prompt(self) -> str:
@@ -26,12 +27,12 @@ class BootstrapContext:
             "\n# Communication Style",
             self.style,
         ]
-        
+
         if self.knowledge:
             parts.append("\n# Key Knowledge")
             for item in self.knowledge:
                 parts.append(f"- {item}")
-                
+
         return "\n".join(parts)
 
 

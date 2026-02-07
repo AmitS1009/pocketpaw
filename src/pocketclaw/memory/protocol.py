@@ -11,14 +11,16 @@ from typing import Protocol, Any
 
 class MemoryType(str, Enum):
     """Types of memory entries."""
-    LONG_TERM = "long_term"      # Facts, preferences, important info
-    DAILY = "daily"              # Daily notes and events
-    SESSION = "session"          # Conversation history
+
+    LONG_TERM = "long_term"  # Facts, preferences, important info
+    DAILY = "daily"  # Daily notes and events
+    SESSION = "session"  # Conversation history
 
 
 @dataclass
 class MemoryEntry:
     """A single memory entry."""
+
     id: str
     type: MemoryType
     content: str

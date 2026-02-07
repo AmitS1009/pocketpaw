@@ -20,13 +20,7 @@ import logging
 from typing import Any
 
 from pocketclaw.config import get_settings, Settings
-from pocketclaw.bus import (
-    get_message_bus,
-    InboundMessage,
-    OutboundMessage,
-    Channel,
-    SystemEvent
-)
+from pocketclaw.bus import get_message_bus, InboundMessage, OutboundMessage, Channel, SystemEvent
 from pocketclaw.memory import get_memory_manager
 from pocketclaw.bootstrap import AgentContextBuilder
 from pocketclaw.agents.router import AgentRouter
@@ -37,7 +31,7 @@ logger = logging.getLogger(__name__)
 class AgentLoop:
     """
     Main agent execution loop.
-    
+
     Orchestrates the flow of data between Bus, Memory, and AgentRouter.
     Uses AgentRouter to delegate to the selected backend (claude_agent_sdk,
     pocketpaw_native, or open_interpreter).
@@ -48,10 +42,10 @@ class AgentLoop:
         self.bus = get_message_bus()
         self.memory = get_memory_manager()
         self.context_builder = AgentContextBuilder(memory_manager=self.memory)
-        
+
         # Agent Router handles backend selection
         self._router: AgentRouter | None = None
-            
+
         self._running = False
 
     def _get_router(self) -> AgentRouter:
@@ -96,14 +90,13 @@ class AgentLoop:
                 session_key=session_key,
                 role="user",
                 content=message.content,
-                metadata=message.metadata
+                metadata=message.metadata,
             )
 
             # 2. Emit thinking event
-            await self.bus.publish_system(SystemEvent(
-                event_type="thinking",
-                data={"session_key": session_key}
-            ))
+            await self.bus.publish_system(
+                SystemEvent(event_type="thinking", data={"session_key": session_key})
+            )
 
             # 3. Run through AgentRouter (handles all backends)
             router = self._get_router()
@@ -117,123 +110,140 @@ class AgentLoop:
                 if chunk_type == "message":
                     # Stream text to user
                     full_response += content
-                    await self.bus.publish_outbound(OutboundMessage(
-                        channel=message.channel,
-                        chat_id=message.chat_id,
-                        content=content,
-                        is_stream_chunk=True
-                    ))
+                    await self.bus.publish_outbound(
+                        OutboundMessage(
+                            channel=message.channel,
+                            chat_id=message.chat_id,
+                            content=content,
+                            is_stream_chunk=True,
+                        )
+                    )
 
                 elif chunk_type == "code":
                     # Code block from Open Interpreter - emit as tool_use
                     language = metadata.get("language", "code")
-                    await self.bus.publish_system(SystemEvent(
-                        event_type="tool_start",
-                        data={"name": f"run_{language}", "params": {"code": content[:100]}}
-                    ))
+                    await self.bus.publish_system(
+                        SystemEvent(
+                            event_type="tool_start",
+                            data={"name": f"run_{language}", "params": {"code": content[:100]}},
+                        )
+                    )
                     # Also stream to user
                     code_block = f"\n```{language}\n{content}\n```\n"
                     full_response += code_block
-                    await self.bus.publish_outbound(OutboundMessage(
-                        channel=message.channel,
-                        chat_id=message.chat_id,
-                        content=code_block,
-                        is_stream_chunk=True
-                    ))
+                    await self.bus.publish_outbound(
+                        OutboundMessage(
+                            channel=message.channel,
+                            chat_id=message.chat_id,
+                            content=code_block,
+                            is_stream_chunk=True,
+                        )
+                    )
 
                 elif chunk_type == "output":
                     # Output from code execution - emit as tool_result
-                    await self.bus.publish_system(SystemEvent(
-                        event_type="tool_result",
-                        data={"name": "code_execution", "result": content[:200], "status": "success"}
-                    ))
+                    await self.bus.publish_system(
+                        SystemEvent(
+                            event_type="tool_result",
+                            data={
+                                "name": "code_execution",
+                                "result": content[:200],
+                                "status": "success",
+                            },
+                        )
+                    )
                     # Also stream to user
                     output_block = f"\n```output\n{content}\n```\n"
                     full_response += output_block
-                    await self.bus.publish_outbound(OutboundMessage(
-                        channel=message.channel,
-                        chat_id=message.chat_id,
-                        content=output_block,
-                        is_stream_chunk=True
-                    ))
+                    await self.bus.publish_outbound(
+                        OutboundMessage(
+                            channel=message.channel,
+                            chat_id=message.chat_id,
+                            content=output_block,
+                            is_stream_chunk=True,
+                        )
+                    )
 
                 elif chunk_type == "tool_use":
                     # Emit tool_start system event for Activity panel
                     tool_name = metadata.get("name") or metadata.get("tool", "unknown")
                     tool_input = metadata.get("input") or metadata
-                    await self.bus.publish_system(SystemEvent(
-                        event_type="tool_start",
-                        data={"name": tool_name, "params": tool_input}
-                    ))
+                    await self.bus.publish_system(
+                        SystemEvent(
+                            event_type="tool_start", data={"name": tool_name, "params": tool_input}
+                        )
+                    )
 
                 elif chunk_type == "tool_result":
                     # Emit tool_result system event for Activity panel
                     tool_name = metadata.get("name") or metadata.get("tool", "unknown")
-                    await self.bus.publish_system(SystemEvent(
-                        event_type="tool_result",
-                        data={
-                            "name": tool_name,
-                            "result": content[:200],  # Truncate for display
-                            "status": "success"
-                        }
-                    ))
+                    await self.bus.publish_system(
+                        SystemEvent(
+                            event_type="tool_result",
+                            data={
+                                "name": tool_name,
+                                "result": content[:200],  # Truncate for display
+                                "status": "success",
+                            },
+                        )
+                    )
 
                 elif chunk_type == "error":
                     # Emit error and send to user
-                    await self.bus.publish_system(SystemEvent(
-                        event_type="tool_result",
-                        data={"name": "agent", "result": content, "status": "error"}
-                    ))
-                    await self.bus.publish_outbound(OutboundMessage(
-                        channel=message.channel,
-                        chat_id=message.chat_id,
-                        content=content,
-                        is_stream_chunk=True
-                    ))
+                    await self.bus.publish_system(
+                        SystemEvent(
+                            event_type="tool_result",
+                            data={"name": "agent", "result": content, "status": "error"},
+                        )
+                    )
+                    await self.bus.publish_outbound(
+                        OutboundMessage(
+                            channel=message.channel,
+                            chat_id=message.chat_id,
+                            content=content,
+                            is_stream_chunk=True,
+                        )
+                    )
 
                 elif chunk_type == "done":
                     # Agent finished - will send stream_end below
                     pass
 
             # 4. Send stream end marker
-            await self.bus.publish_outbound(OutboundMessage(
-                channel=message.channel,
-                chat_id=message.chat_id,
-                content="",
-                is_stream_end=True
-            ))
+            await self.bus.publish_outbound(
+                OutboundMessage(
+                    channel=message.channel, chat_id=message.chat_id, content="", is_stream_end=True
+                )
+            )
 
             # 5. Store assistant response in memory
             if full_response:
                 await self.memory.add_to_session(
-                    session_key=session_key,
-                    role="assistant",
-                    content=full_response
+                    session_key=session_key, role="assistant", content=full_response
                 )
 
         except Exception as e:
             logger.exception(f"❌ Error processing message: {e}")
             # Send error message
-            await self.bus.publish_outbound(OutboundMessage(
-                channel=message.channel,
-                chat_id=message.chat_id,
-                content=f"An error occurred: {str(e)}",
-            ))
+            await self.bus.publish_outbound(
+                OutboundMessage(
+                    channel=message.channel,
+                    chat_id=message.chat_id,
+                    content=f"An error occurred: {str(e)}",
+                )
+            )
             # Send stream end on error
-            await self.bus.publish_outbound(OutboundMessage(
-                channel=message.channel,
-                chat_id=message.chat_id,
-                content="",
-                is_stream_end=True
-            ))
+            await self.bus.publish_outbound(
+                OutboundMessage(
+                    channel=message.channel, chat_id=message.chat_id, content="", is_stream_end=True
+                )
+            )
 
     async def _send_response(self, original: InboundMessage, content: str) -> None:
         """Helper to send a simple text response."""
-        await self.bus.publish_outbound(OutboundMessage(
-            channel=original.channel,
-            chat_id=original.chat_id,
-            content=content
-        ))
+        await self.bus.publish_outbound(
+            OutboundMessage(channel=original.channel, chat_id=original.chat_id, content=content)
+        )
 
     def reset_router(self) -> None:
         """Reset the router to pick up new settings."""

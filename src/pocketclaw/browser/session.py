@@ -69,11 +69,7 @@ class BrowserSessionManager:
                 self._locks[session_id] = asyncio.Lock()
             return self._locks[session_id]
 
-    async def get_or_create(
-        self,
-        session_id: str,
-        headless: bool = True
-    ) -> BrowserSession:
+    async def get_or_create(self, session_id: str, headless: bool = True) -> BrowserSession:
         """Get an existing session or create a new one.
 
         Args:
@@ -101,10 +97,7 @@ class BrowserSessionManager:
             driver = BrowserDriver(headless=headless)
             await driver.launch()
 
-            session = BrowserSession(
-                session_id=session_id,
-                driver=driver
-            )
+            session = BrowserSession(session_id=session_id, driver=driver)
             self._sessions[session_id] = session
 
             return session

@@ -56,16 +56,16 @@ class FileMemoryStore:
         content = path.read_text(encoding="utf-8")
 
         # Split by headers (## or ###)
-        sections = re.split(r'\n(?=##+ )', content)
+        sections = re.split(r"\n(?=##+ )", content)
 
         for section in sections:
             if not section.strip():
                 continue
 
             # Extract header and content
-            lines = section.strip().split('\n')
-            header = lines[0].lstrip('#').strip()
-            body = '\n'.join(lines[1:]).strip()
+            lines = section.strip().split("\n")
+            header = lines[0].lstrip("#").strip()
+            body = "\n".join(lines[1:]).strip()
 
             if body:
                 entry_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{path}:{header}"))
@@ -79,7 +79,7 @@ class FileMemoryStore:
 
     def _extract_tags(self, content: str) -> list[str]:
         """Extract #tags from content."""
-        return re.findall(r'#(\w+)', content)
+        return re.findall(r"#(\w+)", content)
 
     def _get_daily_file(self, d: date) -> Path:
         """Get the path for a daily notes file."""
@@ -141,13 +141,15 @@ class FileMemoryStore:
                 pass
 
         # Append new entry
-        session_data.append({
-            "id": entry.id,
-            "role": entry.role,
-            "content": entry.content,
-            "timestamp": entry.created_at.isoformat(),
-            "metadata": entry.metadata,
-        })
+        session_data.append(
+            {
+                "id": entry.id,
+                "role": entry.role,
+                "content": entry.content,
+                "timestamp": entry.created_at.isoformat(),
+                "metadata": entry.metadata,
+            }
+        )
 
         # Save back
         session_file.write_text(json.dumps(session_data, indent=2))

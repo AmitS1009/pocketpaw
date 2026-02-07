@@ -18,10 +18,7 @@ class TestBrowserSession:
     def test_create_session(self):
         """Should create a session with driver and metadata."""
         mock_driver = MagicMock()
-        session = BrowserSession(
-            session_id="test-123",
-            driver=mock_driver
-        )
+        session = BrowserSession(session_id="test-123", driver=mock_driver)
 
         assert session.session_id == "test-123"
         assert session.driver is mock_driver
@@ -31,14 +28,12 @@ class TestBrowserSession:
     def test_session_touch(self):
         """Should update last_used_at on touch."""
         mock_driver = MagicMock()
-        session = BrowserSession(
-            session_id="test-123",
-            driver=mock_driver
-        )
+        session = BrowserSession(session_id="test-123", driver=mock_driver)
 
         original_time = session.last_used_at
         # Small sleep to ensure time difference
         import time
+
         time.sleep(0.01)
 
         session.touch()
@@ -59,7 +54,7 @@ class TestBrowserSessionManager:
         """Should create new session if none exists."""
         manager = BrowserSessionManager()
 
-        with patch('pocketclaw.browser.session.BrowserDriver') as MockDriver:
+        with patch("pocketclaw.browser.session.BrowserDriver") as MockDriver:
             mock_driver = AsyncMock()
             MockDriver.return_value = mock_driver
 
@@ -74,7 +69,7 @@ class TestBrowserSessionManager:
         """Should return existing session if it exists."""
         manager = BrowserSessionManager()
 
-        with patch('pocketclaw.browser.session.BrowserDriver') as MockDriver:
+        with patch("pocketclaw.browser.session.BrowserDriver") as MockDriver:
             mock_driver = AsyncMock()
             mock_driver.is_launched = True
             MockDriver.return_value = mock_driver
@@ -91,7 +86,7 @@ class TestBrowserSessionManager:
         """Should recreate session if the previous one was closed."""
         manager = BrowserSessionManager()
 
-        with patch('pocketclaw.browser.session.BrowserDriver') as MockDriver:
+        with patch("pocketclaw.browser.session.BrowserDriver") as MockDriver:
             mock_driver1 = AsyncMock()
             mock_driver1.is_launched = True
             mock_driver2 = AsyncMock()
@@ -113,7 +108,7 @@ class TestBrowserSessionManager:
         """Should close and remove session."""
         manager = BrowserSessionManager()
 
-        with patch('pocketclaw.browser.session.BrowserDriver') as MockDriver:
+        with patch("pocketclaw.browser.session.BrowserDriver") as MockDriver:
             mock_driver = AsyncMock()
             MockDriver.return_value = mock_driver
 
@@ -136,7 +131,7 @@ class TestBrowserSessionManager:
         """Should close sessions idle longer than timeout."""
         manager = BrowserSessionManager()
 
-        with patch('pocketclaw.browser.session.BrowserDriver') as MockDriver:
+        with patch("pocketclaw.browser.session.BrowserDriver") as MockDriver:
             mock_driver = AsyncMock()
             mock_driver.is_launched = True
             MockDriver.return_value = mock_driver
@@ -145,6 +140,7 @@ class TestBrowserSessionManager:
 
             # Manually make session appear old
             from datetime import datetime, timedelta
+
             session._last_used_at = datetime.now() - timedelta(seconds=400)
 
             # Cleanup with 300 second timeout
@@ -158,7 +154,7 @@ class TestBrowserSessionManager:
         """Should keep recently used sessions."""
         manager = BrowserSessionManager()
 
-        with patch('pocketclaw.browser.session.BrowserDriver') as MockDriver:
+        with patch("pocketclaw.browser.session.BrowserDriver") as MockDriver:
             mock_driver = AsyncMock()
             mock_driver.is_launched = True
             MockDriver.return_value = mock_driver
@@ -175,7 +171,7 @@ class TestBrowserSessionManager:
         """Should close all sessions."""
         manager = BrowserSessionManager()
 
-        with patch('pocketclaw.browser.session.BrowserDriver') as MockDriver:
+        with patch("pocketclaw.browser.session.BrowserDriver") as MockDriver:
             mock_driver1 = AsyncMock()
             mock_driver2 = AsyncMock()
             MockDriver.side_effect = [mock_driver1, mock_driver2]
@@ -238,16 +234,13 @@ class TestBrowserSessionManagerConcurrency:
         """Should handle concurrent session creation safely."""
         manager = BrowserSessionManager()
 
-        with patch('pocketclaw.browser.session.BrowserDriver') as MockDriver:
+        with patch("pocketclaw.browser.session.BrowserDriver") as MockDriver:
             mock_driver = AsyncMock()
             mock_driver.is_launched = True
             MockDriver.return_value = mock_driver
 
             # Concurrent requests for same session
-            tasks = [
-                manager.get_or_create("shared-session")
-                for _ in range(5)
-            ]
+            tasks = [manager.get_or_create("shared-session") for _ in range(5)]
             sessions = await asyncio.gather(*tasks)
 
             # All should return the same session

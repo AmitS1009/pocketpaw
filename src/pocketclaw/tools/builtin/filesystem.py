@@ -33,7 +33,7 @@ class ReadFileTool(BaseTool):
                     "type": "string",
                     "description": "File encoding (default: utf-8)",
                     "default": "utf-8",
-                }
+                },
             },
             "required": ["path"],
         }
@@ -91,7 +91,7 @@ class WriteFileTool(BaseTool):
                 "content": {
                     "type": "string",
                     "description": "Content to write to the file",
-                }
+                },
             },
             "required": ["path", "content"],
         }
@@ -141,7 +141,7 @@ class ListDirTool(BaseTool):
                     "type": "boolean",
                     "description": "Show hidden files (default: false)",
                     "default": False,
-                }
+                },
             },
             "required": ["path"],
         }
@@ -164,7 +164,7 @@ class ListDirTool(BaseTool):
 
             items = []
             for item in sorted(dir_path.iterdir()):
-                if not show_hidden and item.name.startswith('.'):
+                if not show_hidden and item.name.startswith("."):
                     continue
 
                 prefix = "[DIR] " if item.is_dir() else "[FILE]"

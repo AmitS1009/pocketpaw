@@ -234,6 +234,7 @@ class TestTriggerEngine:
     @pytest.mark.asyncio
     async def test_add_cron_trigger(self, engine):
         """Test adding a cron trigger."""
+
         # Start engine with async no-op callback
         async def noop(x):
             pass
@@ -254,6 +255,7 @@ class TestTriggerEngine:
     @pytest.mark.asyncio
     async def test_remove_trigger(self, engine):
         """Test removing a trigger."""
+
         async def noop(x):
             pass
 
@@ -275,6 +277,7 @@ class TestTriggerEngine:
     @pytest.mark.asyncio
     async def test_disabled_intention_not_scheduled(self, engine):
         """Test that disabled intentions are not scheduled."""
+
         async def noop(x):
             pass
 

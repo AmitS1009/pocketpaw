@@ -33,8 +33,10 @@ class TestBrowserDriverContextManager:
         """Should launch browser on enter and close on exit."""
         driver = BrowserDriver()
 
-        with patch.object(driver, 'launch', new_callable=AsyncMock) as mock_launch, \
-             patch.object(driver, 'close', new_callable=AsyncMock) as mock_close:
+        with (
+            patch.object(driver, "launch", new_callable=AsyncMock) as mock_launch,
+            patch.object(driver, "close", new_callable=AsyncMock) as mock_close,
+        ):
             async with driver:
                 mock_launch.assert_called_once()
             mock_close.assert_called_once()
@@ -62,7 +64,7 @@ class TestBrowserDriverLaunch:
         mock_pw_cm = MagicMock()
         mock_pw_cm.start = AsyncMock(return_value=mock_playwright)
 
-        with patch('pocketclaw.browser.driver.async_playwright', return_value=mock_pw_cm):
+        with patch("pocketclaw.browser.driver.async_playwright", return_value=mock_pw_cm):
             await driver.launch()
 
             assert driver._browser is not None
@@ -85,13 +87,13 @@ class TestBrowserDriverLaunch:
         mock_pw_cm = MagicMock()
         mock_pw_cm.start = AsyncMock(return_value=mock_playwright)
 
-        with patch('pocketclaw.browser.driver.async_playwright', return_value=mock_pw_cm):
+        with patch("pocketclaw.browser.driver.async_playwright", return_value=mock_pw_cm):
             await driver.launch()
 
             # Should call new_context with viewport
             mock_browser.new_context.assert_called_once()
             call_kwargs = mock_browser.new_context.call_args.kwargs
-            assert 'viewport' in call_kwargs
+            assert "viewport" in call_kwargs
 
 
 class TestBrowserDriverNavigation:
@@ -105,15 +107,14 @@ class TestBrowserDriverNavigation:
         driver._page.goto = AsyncMock()
         driver._page.title = AsyncMock(return_value="Test Page")
         driver._page.url = "https://example.com"
-        driver._page.accessibility.snapshot = AsyncMock(return_value={
-            "role": "WebArea", "name": "Test Page", "children": []
-        })
+        driver._page.accessibility.snapshot = AsyncMock(
+            return_value={"role": "WebArea", "name": "Test Page", "children": []}
+        )
 
         result = await driver.navigate("https://example.com")
 
         driver._page.goto.assert_called_once_with(
-            "https://example.com",
-            wait_until="domcontentloaded"
+            "https://example.com", wait_until="domcontentloaded"
         )
         assert "Page: Test Page" in result.snapshot
 
@@ -125,13 +126,13 @@ class TestBrowserDriverNavigation:
         driver._page.goto = AsyncMock()
         driver._page.title = AsyncMock(return_value="Example")
         driver._page.url = "https://example.com"
-        driver._page.accessibility.snapshot = AsyncMock(return_value={
-            "role": "WebArea",
-            "name": "Example",
-            "children": [
-                {"role": "button", "name": "Click Me"}
-            ]
-        })
+        driver._page.accessibility.snapshot = AsyncMock(
+            return_value={
+                "role": "WebArea",
+                "name": "Example",
+                "children": [{"role": "button", "name": "Click Me"}],
+            }
+        )
 
         result = await driver.navigate("https://example.com")
 
@@ -164,9 +165,9 @@ class TestBrowserDriverClick:
         driver._page.locator.return_value = mock_locator
         driver._page.title = AsyncMock(return_value="Form")
         driver._page.url = "https://example.com/form"
-        driver._page.accessibility.snapshot = AsyncMock(return_value={
-            "role": "WebArea", "name": "Form", "children": []
-        })
+        driver._page.accessibility.snapshot = AsyncMock(
+            return_value={"role": "WebArea", "name": "Form", "children": []}
+        )
 
         result = await driver.click(ref=1)
 
@@ -251,9 +252,9 @@ class TestBrowserDriverScroll:
         driver._page = AsyncMock()
         driver._page.title = AsyncMock(return_value="Page")
         driver._page.url = "https://example.com"
-        driver._page.accessibility.snapshot = AsyncMock(return_value={
-            "role": "WebArea", "name": "Page", "children": []
-        })
+        driver._page.accessibility.snapshot = AsyncMock(
+            return_value={"role": "WebArea", "name": "Page", "children": []}
+        )
 
         result = await driver.scroll(direction="down")
 
@@ -267,9 +268,9 @@ class TestBrowserDriverScroll:
         driver._page = AsyncMock()
         driver._page.title = AsyncMock(return_value="Page")
         driver._page.url = "https://example.com"
-        driver._page.accessibility.snapshot = AsyncMock(return_value={
-            "role": "WebArea", "name": "Page", "children": []
-        })
+        driver._page.accessibility.snapshot = AsyncMock(
+            return_value={"role": "WebArea", "name": "Page", "children": []}
+        )
 
         await driver.scroll(direction="up")
 
@@ -295,13 +296,13 @@ class TestBrowserDriverSnapshot:
         driver._page = AsyncMock()
         driver._page.title = AsyncMock(return_value="Current Page")
         driver._page.url = "https://example.com/current"
-        driver._page.accessibility.snapshot = AsyncMock(return_value={
-            "role": "WebArea",
-            "name": "Current Page",
-            "children": [
-                {"role": "heading", "name": "Hello", "level": 1}
-            ]
-        })
+        driver._page.accessibility.snapshot = AsyncMock(
+            return_value={
+                "role": "WebArea",
+                "name": "Current Page",
+                "children": [{"role": "heading", "name": "Hello", "level": 1}],
+            }
+        )
 
         result = await driver.snapshot()
 
@@ -331,7 +332,7 @@ class TestBrowserDriverScreenshot:
         driver = BrowserDriver()
         driver._page = AsyncMock()
 
-        with patch('pocketclaw.browser.driver.datetime') as mock_dt:
+        with patch("pocketclaw.browser.driver.datetime") as mock_dt:
             mock_dt.now.return_value.strftime.return_value = "20240101_120000"
             path = await driver.screenshot()
 

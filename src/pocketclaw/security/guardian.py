@@ -18,13 +18,14 @@ from pocketclaw.security.audit import get_audit_logger, AuditSeverity, AuditEven
 
 logger = logging.getLogger("guardian")
 
+
 class GuardianAgent:
     """
     AI Security Guardian.
-    
+
     analyzes commands and strictly classifies them as SAFE or DANGEROUS.
     """
-    
+
     SYSTEM_PROMPT = """
 You are the Guardian, a security AI for the PocketPaw agent.
 Your ONLY job is to analyze shell commands for safety.
@@ -50,7 +51,7 @@ Respond with valid JSON only:
         self.settings = get_settings()
         self.client: AsyncAnthropic | None = None
         self._audit = get_audit_logger()
-        
+
     async def _ensure_client(self):
         if not self.client and self.settings.anthropic_api_key:
             self.client = AsyncAnthropic(api_key=self.settings.anthropic_api_key)
@@ -61,57 +62,59 @@ Respond with valid JSON only:
         Returns: (is_safe, reason)
         """
         await self._ensure_client()
-        
+
         if not self.client:
             logger.warning("Guardian disabled (no API key). Allowing command.")
             return True, "Guardian disabled"
 
         # Audit Check
-        self._audit.log(AuditEvent.create(
-            severity=AuditSeverity.INFO,
-            actor="guardian",
-            action="scan_command",
-            target="shell",
-            status="pending",
-            command=command
-        ))
+        self._audit.log(
+            AuditEvent.create(
+                severity=AuditSeverity.INFO,
+                actor="guardian",
+                action="scan_command",
+                target="shell",
+                status="pending",
+                command=command,
+            )
+        )
 
         try:
             response = await self.client.messages.create(
-                model=self.settings.anthropic_model, # Use same model or faster one
+                model=self.settings.anthropic_model,  # Use same model or faster one
                 max_tokens=100,
                 system=self.SYSTEM_PROMPT,
-                messages=[{
-                    "role": "user",
-                    "content": f"Command: {command}"
-                }]
+                messages=[{"role": "user", "content": f"Command: {command}"}],
             )
-            
+
             content = response.content[0].text
             import json
+
             # Handle potential markdown wrapping
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0]
             elif "{" in content:
-                content = content[content.find("{"):content.rfind("}")+1]
-                
+                content = content[content.find("{") : content.rfind("}") + 1]
+
             result = json.loads(content)
             status = result.get("status", "DANGEROUS")
             reason = result.get("reason", "Unknown")
-            
+
             is_safe = status == "SAFE"
-            
+
             # Audit Result
-            self._audit.log(AuditEvent.create(
-                severity=AuditSeverity.INFO if is_safe else AuditSeverity.ALERT,
-                actor="guardian",
-                action="scan_result",
-                target="shell",
-                status="allow" if is_safe else "block",
-                reason=reason,
-                command=command
-            ))
-            
+            self._audit.log(
+                AuditEvent.create(
+                    severity=AuditSeverity.INFO if is_safe else AuditSeverity.ALERT,
+                    actor="guardian",
+                    action="scan_result",
+                    target="shell",
+                    status="allow" if is_safe else "block",
+                    reason=reason,
+                    command=command,
+                )
+            )
+
             return is_safe, reason
 
         except Exception as e:
@@ -121,8 +124,10 @@ Respond with valid JSON only:
             # Security-first: BLOCK.
             return False, f"Guardian error: {str(e)}"
 
+
 # Singleton
 _guardian: GuardianAgent | None = None
+
 
 def get_guardian() -> GuardianAgent:
     global _guardian

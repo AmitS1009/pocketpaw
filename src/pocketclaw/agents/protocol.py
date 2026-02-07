@@ -11,7 +11,7 @@ from typing import Any, AsyncIterator, Protocol, Optional
 @dataclass
 class AgentEvent:
     """Standardized event from any agent backend.
-    
+
     Types:
         - "message": Text content from the agent
         - "code": Code block being executed
@@ -20,6 +20,7 @@ class AgentEvent:
         - "error": Error message
         - "done": Agent finished processing
     """
+
     type: str
     content: Any
     metadata: dict = field(default_factory=dict)
@@ -29,9 +30,10 @@ class AgentEvent:
 # Layer 1: AgentProtocol - Simple interface for standalone backends
 # =============================================================================
 
+
 class AgentProtocol(Protocol):
     """Interface that all agent backends must implement.
-    
+
     This allows swapping backends (Open Interpreter, Claude Code, Claude Agent SDK)
     without changing the calling code in dashboard.py or bot_gateway.py.
     """
@@ -53,14 +55,15 @@ class AgentProtocol(Protocol):
 # Layer 2: ExecutorProtocol - The "Hands" (OS Control)
 # =============================================================================
 
+
 class ExecutorProtocol(Protocol):
     """Interface for execution layer (OS control).
-    
+
     The executor handles actual system operations:
     - Shell commands
     - File read/write
     - Browser automation
-    
+
     Implementations: OpenInterpreterExecutor, DockerSandboxExecutor (future)
     """
 
@@ -85,15 +88,16 @@ class ExecutorProtocol(Protocol):
 # Layer 2: OrchestratorProtocol - The "Brain" (Decision Making)
 # =============================================================================
 
+
 class OrchestratorProtocol(Protocol):
     """Interface for orchestration layer (decision making).
-    
+
     The orchestrator handles:
     - Session management
     - Lifecycle hooks (PreToolUse, PostToolUse)
     - Context compression
     - Tool routing to executor
-    
+
     Implementations: ClaudeAgentSDKOrchestrator, PocketPawNativeOrchestrator (future)
     """
 
@@ -108,4 +112,3 @@ class OrchestratorProtocol(Protocol):
     async def stop(self) -> None:
         """Stop the orchestrator."""
         ...
-

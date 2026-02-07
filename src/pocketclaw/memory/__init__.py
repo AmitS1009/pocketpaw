@@ -10,6 +10,7 @@ from pocketclaw.memory.manager import MemoryManager, get_memory_manager, create_
 # Mem0 store is optional - requires mem0ai package
 try:
     from pocketclaw.memory.mem0_store import Mem0MemoryStore
+
     _HAS_MEM0 = True
 except ImportError:
     Mem0MemoryStore = None  # type: ignore

@@ -39,6 +39,7 @@ def mock_memory_manager(temp_memory_path):
 # RememberTool Tests
 # =============================================================================
 
+
 class TestRememberTool:
     """Tests for RememberTool."""
 
@@ -79,8 +80,7 @@ class TestRememberTool:
         """Test saving content with tags."""
         tool = RememberTool()
         result = await tool.execute(
-            content="User's favorite color is blue",
-            tags=["preferences", "color"]
+            content="User's favorite color is blue", tags=["preferences", "color"]
         )
 
         assert "Remembered" in result
@@ -121,6 +121,7 @@ class TestRememberTool:
 # =============================================================================
 # RecallTool Tests
 # =============================================================================
+
 
 class TestRecallTool:
     """Tests for RecallTool."""
@@ -187,6 +188,7 @@ class TestRecallTool:
 # Integration Tests
 # =============================================================================
 
+
 class TestMemoryToolsIntegration:
     """Integration tests for memory tools working together."""
 
@@ -198,8 +200,7 @@ class TestMemoryToolsIntegration:
 
         # Remember something
         remember_result = await remember_tool.execute(
-            content="The user's project is called PocketClaw",
-            tags=["project", "name"]
+            content="The user's project is called PocketClaw", tags=["project", "name"]
         )
         assert "Remembered" in remember_result
 
@@ -231,6 +232,7 @@ class TestMemoryToolsIntegration:
 # PocketPaw Native Memory Tool Execution Tests
 # =============================================================================
 
+
 class TestPocketPawNativeMemoryExecution:
     """Test memory tool execution in PocketPaw Native orchestrator."""
 
@@ -238,6 +240,7 @@ class TestPocketPawNativeMemoryExecution:
     def mock_settings(self, temp_memory_path):
         """Create mock settings."""
         from pocketclaw.config import Settings
+
         return Settings(
             anthropic_api_key="test-key",
             file_jail_path=temp_memory_path.parent,
@@ -254,10 +257,10 @@ class TestPocketPawNativeMemoryExecution:
             orchestrator = PocketPawOrchestrator(mock_settings)
 
             # Execute remember tool
-            result = await orchestrator._execute_tool("remember", {
-                "content": "User prefers vim keybindings",
-                "tags": ["preferences", "editor"]
-            })
+            result = await orchestrator._execute_tool(
+                "remember",
+                {"content": "User prefers vim keybindings", "tags": ["preferences", "editor"]},
+            )
 
             assert "Remembered" in result
             assert "vim" in result
@@ -311,6 +314,7 @@ class TestPocketPawNativeMemoryExecution:
 # Session List API Tests
 # =============================================================================
 
+
 class TestSessionListAPI:
     """Tests for the session list API endpoint."""
 
@@ -322,12 +326,32 @@ class TestSessionListAPI:
 
         # Create test session files
         session1 = [
-            {"id": "1", "role": "user", "content": "Hello, how are you?", "timestamp": "2026-02-05T10:00:00"},
-            {"id": "2", "role": "assistant", "content": "I'm doing great!", "timestamp": "2026-02-05T10:01:00"},
+            {
+                "id": "1",
+                "role": "user",
+                "content": "Hello, how are you?",
+                "timestamp": "2026-02-05T10:00:00",
+            },
+            {
+                "id": "2",
+                "role": "assistant",
+                "content": "I'm doing great!",
+                "timestamp": "2026-02-05T10:01:00",
+            },
         ]
         session2 = [
-            {"id": "3", "role": "user", "content": "What's the weather?", "timestamp": "2026-02-05T11:00:00"},
-            {"id": "4", "role": "assistant", "content": "It's sunny today.", "timestamp": "2026-02-05T11:01:00"},
+            {
+                "id": "3",
+                "role": "user",
+                "content": "What's the weather?",
+                "timestamp": "2026-02-05T11:00:00",
+            },
+            {
+                "id": "4",
+                "role": "assistant",
+                "content": "It's sunny today.",
+                "timestamp": "2026-02-05T11:01:00",
+            },
             {"id": "5", "role": "user", "content": "Thanks!", "timestamp": "2026-02-05T11:02:00"},
         ]
 
@@ -341,19 +365,23 @@ class TestSessionListAPI:
         """Test listing sessions from directory."""
         # Simulate what the API does
         sessions = []
-        for session_file in sorted(sessions_path.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+        for session_file in sorted(
+            sessions_path.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True
+        ):
             data = json.loads(session_file.read_text())
             if data:
                 first_msg = data[0]
                 last_msg = data[-1]
-                sessions.append({
-                    "id": session_file.stem,
-                    "message_count": len(data),
-                    "first_message": first_msg.get("content", "")[:100],
-                    "last_message": last_msg.get("content", "")[:100],
-                    "updated_at": last_msg.get("timestamp", ""),
-                    "created_at": first_msg.get("timestamp", ""),
-                })
+                sessions.append(
+                    {
+                        "id": session_file.stem,
+                        "message_count": len(data),
+                        "first_message": first_msg.get("content", "")[:100],
+                        "last_message": last_msg.get("content", "")[:100],
+                        "updated_at": last_msg.get("timestamp", ""),
+                        "created_at": first_msg.get("timestamp", ""),
+                    }
+                )
 
         assert len(sessions) == 2
         # Check session data
@@ -387,7 +415,9 @@ class TestSessionListAPI:
         (sessions_dir / "bad_session.json").write_text("not valid json {")
 
         # Create a valid file
-        valid_session = [{"id": "1", "role": "user", "content": "Test", "timestamp": "2026-02-05T10:00:00"}]
+        valid_session = [
+            {"id": "1", "role": "user", "content": "Test", "timestamp": "2026-02-05T10:00:00"}
+        ]
         (sessions_dir / "good_session.json").write_text(json.dumps(valid_session))
 
         # Simulate API logic
@@ -408,6 +438,7 @@ class TestSessionListAPI:
 # =============================================================================
 # Memory Tool Registration Tests
 # =============================================================================
+
 
 class TestMemoryToolRegistration:
     """Test that memory tools are properly registered."""

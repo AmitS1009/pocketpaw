@@ -30,7 +30,7 @@ class TestBootstrapContext:
             style="Be terse.",
             knowledge=["Fact 1", "Fact 2"],
         )
-        
+
         prompt = ctx.to_system_prompt()
         assert "# Identity: TestAgent" in prompt
         assert "I am a test agent." in prompt
@@ -46,12 +46,12 @@ class TestDefaultBootstrapProvider:
     @pytest.mark.asyncio
     async def test_defaults_creation(self, temp_identity_path):
         provider = DefaultBootstrapProvider(base_path=temp_identity_path)
-        
+
         # Check files created
         assert (temp_identity_path / "IDENTITY.md").exists()
         assert (temp_identity_path / "SOUL.md").exists()
         assert (temp_identity_path / "STYLE.md").exists()
-        
+
         # Check content loading
         ctx = await provider.get_context()
         assert ctx.name == "PocketPaw"
@@ -61,10 +61,10 @@ class TestDefaultBootstrapProvider:
     async def test_custom_content(self, temp_identity_path):
         # Create provider (makes defaults)
         provider = DefaultBootstrapProvider(base_path=temp_identity_path)
-        
+
         # Modify files
         (temp_identity_path / "IDENTITY.md").write_text("I am CustomAgent")
-        
+
         # Reload
         ctx = await provider.get_context()
         assert ctx.identity == "I am CustomAgent"
@@ -77,24 +77,23 @@ class TestAgentContextBuilder:
     async def test_build_full_prompt(self):
         # Mock provider
         mock_provider = MagicMock()
-        mock_provider.get_context = AsyncMock(return_value=BootstrapContext(
-            name="Test",
-            identity="Identity",
-            soul="Soul",
-            style="Style"
-        ))
-        
+        mock_provider.get_context = AsyncMock(
+            return_value=BootstrapContext(
+                name="Test", identity="Identity", soul="Soul", style="Style"
+            )
+        )
+
         # Mock memory
         mock_memory = MagicMock()
         mock_memory.get_context_for_agent = AsyncMock(return_value="Memory Context")
-        
+
         builder = AgentContextBuilder(
             bootstrap_provider=mock_provider,
             memory_manager=mock_memory,
         )
-        
+
         prompt = await builder.build_system_prompt(include_memory=True)
-        
+
         assert "Identity" in prompt
         assert "Memory Context" in prompt
         assert "# Memory Context" in prompt
@@ -103,19 +102,18 @@ class TestAgentContextBuilder:
     async def test_build_no_memory(self):
         # Mock provider
         mock_provider = MagicMock()
-        mock_provider.get_context = AsyncMock(return_value=BootstrapContext(
-            name="Test",
-            identity="Identity",
-            soul="Soul",
-            style="Style"
-        ))
-        
+        mock_provider.get_context = AsyncMock(
+            return_value=BootstrapContext(
+                name="Test", identity="Identity", soul="Soul", style="Style"
+            )
+        )
+
         builder = AgentContextBuilder(
             bootstrap_provider=mock_provider,
             memory_manager=MagicMock(),
         )
-        
+
         prompt = await builder.build_system_prompt(include_memory=False)
-        
+
         assert "Identity" in prompt
         assert "Memory Context" not in prompt

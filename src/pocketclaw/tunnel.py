@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 import re
@@ -27,7 +26,7 @@ class TunnelManager:
         """Attempt to install cloudflared via Homebrew."""
         if self.is_installed():
             return True
-            
+
         logger.info("cloudflared not found. Attempting installation via Homebrew...")
         try:
             # Check for brew first
@@ -36,12 +35,14 @@ class TunnelManager:
                 return False
 
             proc = await asyncio.create_subprocess_exec(
-                "brew", "install", "cloudflared",
+                "brew",
+                "install",
+                "cloudflared",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await proc.communicate()
-            
+
             if proc.returncode == 0:
                 logger.info("cloudflared installed successfully!")
                 return True
@@ -62,7 +63,9 @@ class TunnelManager:
             logger.info("cloudflared missing, attempting auto-install...")
             installed = await self.install()
             if not installed:
-                 raise RuntimeError("cloudflared is not installed and auto-installation failed. Please run 'brew install cloudflared'.")
+                raise RuntimeError(
+                    "cloudflared is not installed and auto-installation failed. Please run 'brew install cloudflared'."
+                )
 
         if self.process:
             if self.public_url:
@@ -75,9 +78,12 @@ class TunnelManager:
         # cloudflared tunnel --url http://localhost:8888
         # Output is printed to stderr usually.
         self.process = await asyncio.create_subprocess_exec(
-            "cloudflared", "tunnel", "--url", f"http://localhost:{self.port}",
+            "cloudflared",
+            "tunnel",
+            "--url",
+            f"http://localhost:{self.port}",
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
 
         try:
@@ -98,16 +104,16 @@ class TunnelManager:
         # We need to read line by line without blocking the loop forever
         # and also not consuming the stream entirely if we want to log it?
         # Actually, extracting the URL is the main goal.
-        
+
         # Regex to find: https://[random].trycloudflare.com
         url_pattern = re.compile(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com")
 
         start_time = asyncio.get_event_loop().time()
-        
+
         while True:
             if asyncio.get_event_loop().time() - start_time > timeout:
                 raise TimeoutError("Timed out waiting for Cloudflare Tunnel URL")
-            
+
             if self.process.returncode is not None:
                 # Process exited prematurely
                 stderr_out = await self.process.stderr.read()
@@ -117,26 +123,26 @@ class TunnelManager:
                 # Read line
                 line_bytes = await asyncio.wait_for(self.process.stderr.readline(), timeout=1.0)
                 if not line_bytes:
-                    break # EOF
-                    
+                    break  # EOF
+
                 line = line_bytes.decode("utf-8", errors="ignore").strip()
                 if line:
                     logger.debug(f"[cloudflared] {line}")
-                
+
                 # Check for URL
                 # Example output: ... trycloudflare.com ...
                 # or: +--------------------------------------------------------------------------------------------+
                 #     |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
                 #     |  https://musical-example-domain.trycloudflare.com                                       |
                 #     +--------------------------------------------------------------------------------------------+
-                
+
                 match = url_pattern.search(line)
                 if match:
                     found_url = match.group(0)
                     # Simple verification it looks right
                     if "trycloudflare.com" in found_url:
                         return found_url
-                        
+
             except asyncio.TimeoutError:
                 continue
 
@@ -153,23 +159,24 @@ class TunnelManager:
                 except asyncio.TimeoutError:
                     self.process.kill()
             except ProcessLookupError:
-                pass # Already dead
+                pass  # Already dead
             finally:
                 self.process = None
                 self.public_url = None
 
     def get_status(self) -> dict:
         """Get current tunnel status."""
-        active = self.process is not None and self.process.returncode is None and self.public_url is not None
-        return {
-            "active": active,
-            "url": self.public_url,
-            "installed": self.is_installed()
-        }
+        active = (
+            self.process is not None
+            and self.process.returncode is None
+            and self.public_url is not None
+        )
+        return {"active": active, "url": self.public_url, "installed": self.is_installed()}
 
 
 # Global instance
 _tunnel_instance: Optional[TunnelManager] = None
+
 
 def get_tunnel_manager(port: int = 8888) -> TunnelManager:
     global _tunnel_instance

@@ -70,21 +70,13 @@ class TestAccessibilityNode:
 
     def test_create_node_with_properties(self):
         """Should create node with extra properties."""
-        node = AccessibilityNode(
-            role="heading",
-            name="Welcome",
-            properties={"level": 1}
-        )
+        node = AccessibilityNode(role="heading", name="Welcome", properties={"level": 1})
         assert node.properties["level"] == 1
 
     def test_create_node_with_children(self):
         """Should create node with child nodes."""
         child = AccessibilityNode(role="text", name="Hello")
-        parent = AccessibilityNode(
-            role="paragraph",
-            name="",
-            children=[child]
-        )
+        parent = AccessibilityNode(role="paragraph", name="", children=[child])
         assert len(parent.children) == 1
         assert parent.children[0].name == "Hello"
 
@@ -109,12 +101,8 @@ class TestSnapshotGenerator:
             role="WebArea",
             name="Test Page",
             children=[
-                AccessibilityNode(
-                    role="heading",
-                    name="Welcome to Test",
-                    properties={"level": 1}
-                )
-            ]
+                AccessibilityNode(role="heading", name="Welcome to Test", properties={"level": 1})
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -133,7 +121,7 @@ class TestSnapshotGenerator:
                 AccessibilityNode(role="textbox", name="Username"),
                 AccessibilityNode(role="textbox", name="Password"),
                 AccessibilityNode(role="button", name="Submit"),
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -154,7 +142,7 @@ class TestSnapshotGenerator:
                 AccessibilityNode(role="heading", name="Title", properties={"level": 1}),
                 AccessibilityNode(role="paragraph", name="Some text"),
                 AccessibilityNode(role="StaticText", name="More text"),
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -172,7 +160,7 @@ class TestSnapshotGenerator:
             children=[
                 AccessibilityNode(role="link", name="Click here"),
                 AccessibilityNode(role="link", name="Learn more"),
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -196,9 +184,9 @@ class TestSnapshotGenerator:
                         AccessibilityNode(role="textbox", name="Email"),
                         AccessibilityNode(role="textbox", name="Password"),
                         AccessibilityNode(role="button", name="Sign In"),
-                    ]
+                    ],
                 )
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -218,12 +206,8 @@ class TestSnapshotGenerator:
             role="WebArea",
             name="Form",
             children=[
-                AccessibilityNode(
-                    role="textbox",
-                    name="Username",
-                    properties={"focused": True}
-                ),
-            ]
+                AccessibilityNode(role="textbox", name="Username", properties={"focused": True}),
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -237,12 +221,8 @@ class TestSnapshotGenerator:
             role="WebArea",
             name="Form",
             children=[
-                AccessibilityNode(
-                    role="button",
-                    name="Submit",
-                    properties={"disabled": True}
-                ),
-            ]
+                AccessibilityNode(role="button", name="Submit", properties={"disabled": True}),
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -256,12 +236,8 @@ class TestSnapshotGenerator:
             role="WebArea",
             name="Login",
             children=[
-                AccessibilityNode(
-                    role="textbox",
-                    name="Password",
-                    properties={"type": "password"}
-                ),
-            ]
+                AccessibilityNode(role="textbox", name="Password", properties={"type": "password"}),
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -276,16 +252,12 @@ class TestSnapshotGenerator:
             name="Settings",
             children=[
                 AccessibilityNode(
-                    role="checkbox",
-                    name="Remember me",
-                    properties={"checked": True}
+                    role="checkbox", name="Remember me", properties={"checked": True}
                 ),
                 AccessibilityNode(
-                    role="checkbox",
-                    name="Newsletter",
-                    properties={"checked": False}
+                    role="checkbox", name="Newsletter", properties={"checked": False}
                 ),
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -300,12 +272,8 @@ class TestSnapshotGenerator:
             role="WebArea",
             name="Form",
             children=[
-                AccessibilityNode(
-                    role="combobox",
-                    name="Country",
-                    properties={"expanded": False}
-                ),
-            ]
+                AccessibilityNode(role="combobox", name="Country", properties={"expanded": False}),
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -321,13 +289,11 @@ class TestSnapshotGenerator:
             name="GitHub Login",
             children=[
                 AccessibilityNode(role="heading", name="Sign in", properties={"level": 1}),
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(
-            node,
-            title="GitHub Login",
-            url="https://github.com/login"
+            node, title="GitHub Login", url="https://github.com/login"
         )
 
         assert "Page: GitHub Login" in snapshot
@@ -341,7 +307,7 @@ class TestSnapshotGenerator:
             name="Page",
             children=[
                 AccessibilityNode(role="button", name="Submit Form"),
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -365,9 +331,9 @@ class TestSnapshotGenerator:
                         AccessibilityNode(role="listitem", name="Home"),
                         AccessibilityNode(role="listitem", name="About"),
                         AccessibilityNode(role="listitem", name="Contact"),
-                    ]
+                    ],
                 )
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -384,7 +350,7 @@ class TestSnapshotGenerator:
             name="Gallery",
             children=[
                 AccessibilityNode(role="img", name="Profile picture of John"),
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -400,12 +366,8 @@ class TestSnapshotGenerator:
             name="Page",
             children=[
                 AccessibilityNode(role="button", name="Visible"),
-                AccessibilityNode(
-                    role="button",
-                    name="Hidden",
-                    properties={"hidden": True}
-                ),
-            ]
+                AccessibilityNode(role="button", name="Hidden", properties={"hidden": True}),
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -422,7 +384,7 @@ class TestSnapshotGenerator:
             name="Page",
             children=[
                 AccessibilityNode(role="paragraph", name=long_name),
-            ]
+            ],
         )
 
         snapshot, refmap = generator.generate(node)
@@ -442,7 +404,7 @@ class TestSnapshotFromPlaywrightTree:
             "children": [
                 {"role": "heading", "name": "Title", "level": 1},
                 {"role": "button", "name": "Click Me"},
-            ]
+            ],
         }
 
         node = AccessibilityNode.from_playwright_dict(playwright_tree)
@@ -469,11 +431,11 @@ class TestSnapshotFromPlaywrightTree:
                             "children": [
                                 {"role": "link", "name": "Home"},
                                 {"role": "link", "name": "About"},
-                            ]
+                            ],
                         }
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
 
         node = AccessibilityNode.from_playwright_dict(playwright_tree)

@@ -101,16 +101,14 @@ class BrowserDriver:
         try:
             self._browser = await self._playwright.chromium.launch(
                 headless=self.headless,
-                channel="chrome"  # Use system Chrome
+                channel="chrome",  # Use system Chrome
             )
             logger.info("Using system Chrome")
         except Exception as e:
             logger.debug(f"System Chrome not available: {e}")
             # Fall back to Playwright's Chromium
             try:
-                self._browser = await self._playwright.chromium.launch(
-                    headless=self.headless
-                )
+                self._browser = await self._playwright.chromium.launch(headless=self.headless)
                 logger.info("Using Playwright Chromium")
             except Exception as install_error:
                 # Chromium not installed - auto-install it
@@ -118,16 +116,12 @@ class BrowserDriver:
                     logger.info("Installing Chromium browser (one-time download)...")
                     await self._install_chromium()
                     # Try again after install
-                    self._browser = await self._playwright.chromium.launch(
-                        headless=self.headless
-                    )
+                    self._browser = await self._playwright.chromium.launch(headless=self.headless)
                     logger.info("Using Playwright Chromium (freshly installed)")
                 else:
                     raise
 
-        context = await self._browser.new_context(
-            viewport=self.DEFAULT_VIEWPORT
-        )
+        context = await self._browser.new_context(viewport=self.DEFAULT_VIEWPORT)
         self._page = await context.new_page()
 
     async def _install_chromium(self) -> None:
@@ -136,9 +130,13 @@ class BrowserDriver:
 
         # Run playwright install chromium
         process = await asyncio.create_subprocess_exec(
-            sys.executable, "-m", "playwright", "install", "chromium",
+            sys.executable,
+            "-m",
+            "playwright",
+            "install",
+            "chromium",
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await process.communicate()
 
@@ -183,9 +181,7 @@ class BrowserDriver:
         tree = AccessibilityNode.from_playwright_dict(tree_dict)
 
         # Generate semantic snapshot
-        snapshot_text, refmap = self._snapshot_generator.generate(
-            tree, title=title, url=url
-        )
+        snapshot_text, refmap = self._snapshot_generator.generate(tree, title=title, url=url)
 
         # Store refmap for future interactions
         self._refmap = refmap

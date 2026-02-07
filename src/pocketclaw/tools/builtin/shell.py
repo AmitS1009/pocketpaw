@@ -44,7 +44,6 @@ class ShellTool(BaseTool):
     def trust_level(self) -> str:
         return "critical"
 
-
     @property
     def parameters(self) -> dict[str, Any]:
         return {
@@ -82,7 +81,7 @@ class ShellTool(BaseTool):
                     text=True,
                     timeout=self.timeout,
                     cwd=self.working_dir,
-                )
+                ),
             )
 
             output = result.stdout

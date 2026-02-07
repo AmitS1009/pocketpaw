@@ -97,11 +97,13 @@ class TestBrowserToolNavigate:
         mock_session = MagicMock()
         mock_driver = AsyncMock()
         mock_session.driver = mock_driver
-        mock_driver.navigate = AsyncMock(return_value=MagicMock(
-            snapshot="Page: Example\nURL: https://example.com\n\n- heading \"Welcome\""
-        ))
+        mock_driver.navigate = AsyncMock(
+            return_value=MagicMock(
+                snapshot='Page: Example\nURL: https://example.com\n\n- heading "Welcome"'
+            )
+        )
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -133,11 +135,11 @@ class TestBrowserToolClick:
         mock_session = MagicMock()
         mock_driver = AsyncMock()
         mock_session.driver = mock_driver
-        mock_driver.click = AsyncMock(return_value=MagicMock(
-            snapshot="Page: After Click\n\n- button \"Clicked\""
-        ))
+        mock_driver.click = AsyncMock(
+            return_value=MagicMock(snapshot='Page: After Click\n\n- button "Clicked"')
+        )
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -156,7 +158,7 @@ class TestBrowserToolClick:
         mock_driver = AsyncMock()
         mock_session.driver = mock_driver
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -180,7 +182,7 @@ class TestBrowserToolType:
         mock_session.driver = mock_driver
         mock_driver.type_text = AsyncMock(return_value="Typed text into element [ref=1]")
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -199,7 +201,7 @@ class TestBrowserToolType:
         mock_driver = AsyncMock()
         mock_session.driver = mock_driver
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -224,11 +226,11 @@ class TestBrowserToolScroll:
         mock_session = MagicMock()
         mock_driver = AsyncMock()
         mock_session.driver = mock_driver
-        mock_driver.scroll = AsyncMock(return_value=MagicMock(
-            snapshot="Page: Scrolled\n\n- content below fold"
-        ))
+        mock_driver.scroll = AsyncMock(
+            return_value=MagicMock(snapshot="Page: Scrolled\n\n- content below fold")
+        )
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -247,7 +249,7 @@ class TestBrowserToolScroll:
         mock_session.driver = mock_driver
         mock_driver.scroll = AsyncMock(return_value=MagicMock(snapshot="Scrolled"))
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -266,7 +268,7 @@ class TestBrowserToolScroll:
         mock_session.driver = mock_driver
         mock_driver.scroll = AsyncMock(return_value=MagicMock(snapshot="Scrolled"))
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -287,11 +289,13 @@ class TestBrowserToolSnapshot:
         mock_session = MagicMock()
         mock_driver = AsyncMock()
         mock_session.driver = mock_driver
-        mock_driver.snapshot = AsyncMock(return_value=MagicMock(
-            snapshot="Page: Current\nURL: https://example.com\n\n- heading \"Title\""
-        ))
+        mock_driver.snapshot = AsyncMock(
+            return_value=MagicMock(
+                snapshot='Page: Current\nURL: https://example.com\n\n- heading "Title"'
+            )
+        )
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -315,7 +319,7 @@ class TestBrowserToolScreenshot:
         mock_session.driver = mock_driver
         mock_driver.screenshot = AsyncMock(return_value="/tmp/screenshot_123.png")
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -334,7 +338,7 @@ class TestBrowserToolClose:
         """Should close the browser session."""
         tool = BrowserTool()
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.close_session = AsyncMock()
             mock_get_mgr.return_value = mock_manager
@@ -372,7 +376,7 @@ class TestBrowserToolErrorHandling:
         mock_session.driver = mock_driver
         mock_driver.navigate = AsyncMock(side_effect=Exception("Connection failed"))
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -396,7 +400,7 @@ class TestBrowserToolSessionManagement:
         mock_session.driver = mock_driver
         mock_driver.snapshot = AsyncMock(return_value=MagicMock(snapshot="Page"))
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager
@@ -417,7 +421,7 @@ class TestBrowserToolSessionManagement:
         mock_session.driver = mock_driver
         mock_driver.snapshot = AsyncMock(return_value=MagicMock(snapshot="Page"))
 
-        with patch('pocketclaw.tools.builtin.browser.get_browser_session_manager') as mock_get_mgr:
+        with patch("pocketclaw.tools.builtin.browser.get_browser_session_manager") as mock_get_mgr:
             mock_manager = AsyncMock()
             mock_manager.get_or_create = AsyncMock(return_value=mock_session)
             mock_get_mgr.return_value = mock_manager

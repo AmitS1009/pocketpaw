@@ -20,6 +20,7 @@ from pocketclaw.config import Settings
 # PROTOCOL TESTS
 # =============================================================================
 
+
 class TestAgentProtocol:
     """Tests for the agent protocol module."""
 
@@ -66,6 +67,7 @@ class TestAgentProtocol:
 # =============================================================================
 # EXECUTOR TESTS (Direct subprocess - Speed fix)
 # =============================================================================
+
 
 class TestExecutor:
     """Tests for OpenInterpreterExecutor with direct subprocess."""
@@ -124,7 +126,9 @@ class TestExecutor:
         result = await executor.run_shell("nonexistent_command_12345")
 
         # Should contain error info, not raise
-        assert "error" in result.lower() or "not found" in result.lower() or "stderr" in result.lower()
+        assert (
+            "error" in result.lower() or "not found" in result.lower() or "stderr" in result.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_run_shell_with_pipe(self):
@@ -148,7 +152,7 @@ class TestExecutor:
         executor = OpenInterpreterExecutor(settings)
 
         # Create temp file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("test content 123")
             temp_path = f.name
 
@@ -167,7 +171,7 @@ class TestExecutor:
         settings = Settings()
         executor = OpenInterpreterExecutor(settings)
 
-        temp_path = tempfile.mktemp(suffix='.txt')
+        temp_path = tempfile.mktemp(suffix=".txt")
 
         try:
             await executor.write_file(temp_path, "written content")
@@ -199,12 +203,13 @@ class TestExecutor:
         settings = Settings()
         executor = OpenInterpreterExecutor(settings)
 
-        assert hasattr(executor, 'run_complex_task')
+        assert hasattr(executor, "run_complex_task")
 
 
 # =============================================================================
 # CLAUDE AGENT SDK TESTS
 # =============================================================================
+
 
 class TestClaudeAgentSDK:
     """Tests for Claude Agent SDK wrapper."""
@@ -354,6 +359,7 @@ class TestClaudeAgentSDK:
 # POCKETPAW NATIVE TESTS
 # =============================================================================
 
+
 class TestPocketPawNative:
     """Tests for PocketPaw Native Orchestrator."""
 
@@ -472,6 +478,7 @@ class TestPocketPawNative:
 # ROUTER TESTS
 # =============================================================================
 
+
 class TestAgentRouter:
     """Tests for agent router."""
 
@@ -558,7 +565,7 @@ class TestAgentRouter:
         settings = Settings()
         router = AgentRouter(settings)
 
-        assert hasattr(router, 'run')
+        assert hasattr(router, "run")
 
     @pytest.mark.asyncio
     async def test_router_has_stop_method(self):
@@ -568,7 +575,7 @@ class TestAgentRouter:
         settings = Settings()
         router = AgentRouter(settings)
 
-        assert hasattr(router, 'stop')
+        assert hasattr(router, "stop")
 
         # Should not raise
         await router.stop()

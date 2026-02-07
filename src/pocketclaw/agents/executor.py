@@ -19,29 +19,29 @@ logger = logging.getLogger(__name__)
 
 class OpenInterpreterExecutor:
     """Open Interpreter as the executor layer.
-    
+
     Implements ExecutorProtocol - handles actual OS operations:
     - Shell commands
     - File read/write
     - Directory listing
-    
+
     Used by orchestrators (Claude Agent SDK) to execute tool calls.
     """
-    
+
     def __init__(self, settings: Settings):
         self.settings = settings
         self._interpreter = None
         self._initialize()
-    
+
     def _initialize(self) -> None:
         """Initialize Open Interpreter instance."""
         try:
             from interpreter import interpreter
-            
+
             # Configure for execution mode (minimal LLM usage)
             interpreter.auto_run = True
             interpreter.loop = False  # Single command execution
-            
+
             # Set LLM for any reasoning needed
             provider = self.settings.llm_provider
             if provider == "anthropic" and self.settings.anthropic_api_key:
@@ -53,20 +53,20 @@ class OpenInterpreterExecutor:
             elif provider == "ollama" or provider == "auto":
                 interpreter.llm.model = f"ollama/{self.settings.ollama_model}"
                 interpreter.llm.api_base = self.settings.ollama_host
-            
+
             self._interpreter = interpreter
             logger.info("=" * 50)
             logger.info("🔧 EXECUTOR: Open Interpreter initialized")
             logger.info("   └─ Role: Shell, files, system commands")
             logger.info("=" * 50)
-            
+
         except ImportError:
             logger.error("❌ Open Interpreter not installed")
             self._interpreter = None
         except Exception as e:
             logger.error(f"❌ Failed to initialize executor: {e}")
             self._interpreter = None
-    
+
     async def run_shell(self, command: str) -> str:
         """Execute a shell command and return output.
 
@@ -81,23 +81,23 @@ class OpenInterpreterExecutor:
                 command,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(Path.home())  # Default to home directory
+                cwd=str(Path.home()),  # Default to home directory
             )
 
             # Wait with timeout
             try:
                 stdout, stderr = await asyncio.wait_for(
                     proc.communicate(),
-                    timeout=60.0  # 60 second timeout
+                    timeout=60.0,  # 60 second timeout
                 )
             except asyncio.TimeoutError:
                 proc.kill()
                 return "Error: Command timed out after 60 seconds"
 
             # Combine output
-            output = stdout.decode('utf-8', errors='replace')
+            output = stdout.decode("utf-8", errors="replace")
             if stderr:
-                err_text = stderr.decode('utf-8', errors='replace')
+                err_text = stderr.decode("utf-8", errors="replace")
                 if err_text.strip():
                     output += f"\n[stderr]: {err_text}"
 
@@ -144,35 +144,36 @@ class OpenInterpreterExecutor:
                 output_parts.append(chunk)
 
         return "".join(output_parts) or "(no output)"
-    
+
     async def read_file(self, path: str) -> str:
         """Read file contents."""
         logger.info(f"🔧 EXECUTOR: read_file({path})")
-        
+
         try:
             # Direct file read - no need for interpreter
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 return f.read()
         except Exception as e:
             logger.error(f"File read error: {e}")
             return f"Error reading file: {str(e)}"
-    
+
     async def write_file(self, path: str, content: str) -> None:
         """Write content to file."""
         logger.info(f"🔧 EXECUTOR: write_file({path})")
-        
+
         try:
-            with open(path, 'w') as f:
+            with open(path, "w") as f:
                 f.write(content)
         except Exception as e:
             logger.error(f"File write error: {e}")
             raise
-    
+
     async def list_directory(self, path: str) -> list[str]:
         """List directory contents."""
         logger.info(f"🔧 EXECUTOR: list_directory({path})")
-        
+
         import os
+
         try:
             return os.listdir(path)
         except Exception as e:

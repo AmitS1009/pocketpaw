@@ -19,22 +19,25 @@ from pocketclaw.config import get_settings
 
 logger = logging.getLogger("audit")
 
+
 class AuditSeverity(str, Enum):
-    INFO = "info"         # Normal operation (e.g. reading a file)
-    WARNING = "warning"   # Potentially dangerous (e.g. writing a file)
-    CRITICAL = "critical" # High risk (e.g. shell command, deleting file)
-    ALERT = "alert"       # Security violation (e.g. blocked command)
+    INFO = "info"  # Normal operation (e.g. reading a file)
+    WARNING = "warning"  # Potentially dangerous (e.g. writing a file)
+    CRITICAL = "critical"  # High risk (e.g. shell command, deleting file)
+    ALERT = "alert"  # Security violation (e.g. blocked command)
+
 
 @dataclass
 class AuditEvent:
     """A single audit log entry."""
+
     id: str
     timestamp: str
     severity: AuditSeverity
-    actor: str          # Who performed the action (user_id or "agent")
-    action: str         # What happened (e.g. "tool_execution", "permission_grant")
-    target: str         # The object of the action (e.g. "rm -rf /", "network_request")
-    status: str         # "allow", "block", "error", "success"
+    actor: str  # Who performed the action (user_id or "agent")
+    action: str  # What happened (e.g. "tool_execution", "permission_grant")
+    target: str  # The object of the action (e.g. "rm -rf /", "network_request")
+    status: str  # "allow", "block", "error", "success"
     context: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -45,7 +48,7 @@ class AuditEvent:
         action: str,
         target: str,
         status: str,
-        **context: Any
+        **context: Any,
     ) -> "AuditEvent":
         return cls(
             id=str(uuid.uuid4()),
@@ -55,15 +58,16 @@ class AuditEvent:
             action=action,
             target=target,
             status=status,
-            context=context
+            context=context,
         )
+
 
 class AuditLogger:
     """
     Append-only audit logger.
     Writes to ~/.pocketclaw/audit.log in JSONL format.
     """
-    
+
     def __init__(self, log_path: Optional[Path] = None):
         if log_path:
             self.log_path = log_path
@@ -75,7 +79,7 @@ class AuditLogger:
             base_dir = Path.home() / ".pocketclaw"
             base_dir.mkdir(parents=True, exist_ok=True)
             self.log_path = base_dir / "audit.jsonl"
-            
+
     def log(self, event: AuditEvent) -> None:
         """Write an event to the audit log."""
         try:
@@ -86,11 +90,11 @@ class AuditLogger:
             logger.critical(f"FAILED TO WRITE AUDIT LOG: {e} | Event: {event}")
 
     def log_tool_use(
-        self, 
-        tool_name: str, 
-        params: dict, 
+        self,
+        tool_name: str,
+        params: dict,
         severity: AuditSeverity = AuditSeverity.INFO,
-        status: str = "attempt"
+        status: str = "attempt",
     ) -> str:
         """Helper to log tool usage."""
         event = AuditEvent.create(
@@ -99,13 +103,15 @@ class AuditLogger:
             action="tool_use",
             target=tool_name,
             status=status,
-            params=params
+            params=params,
         )
         self.log(event)
         return event.id
 
+
 # Singleton
 _audit_logger: Optional[AuditLogger] = None
+
 
 def get_audit_logger() -> AuditLogger:
     global _audit_logger

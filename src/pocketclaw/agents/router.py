@@ -48,11 +48,15 @@ class AgentRouter:
 
         if backend == "claude_agent_sdk":
             from pocketclaw.agents.claude_sdk import ClaudeAgentSDKWrapper
+
             self._agent = ClaudeAgentSDKWrapper(self.settings)
-            logger.info("🚀 [bold green]Claude Agent SDK[/] ─ Bash, WebSearch, WebFetch, Read, Write")
+            logger.info(
+                "🚀 [bold green]Claude Agent SDK[/] ─ Bash, WebSearch, WebFetch, Read, Write"
+            )
 
         elif backend == "pocketpaw_native":
             from pocketclaw.agents.pocketpaw_native import PocketPawOrchestrator
+
             self._agent = PocketPawOrchestrator(self.settings)
             logger.info("🧠 [bold blue]PocketPaw Native[/] ─ Anthropic + Open Interpreter")
 
@@ -63,11 +67,12 @@ class AgentRouter:
         else:
             logger.warning(f"Unknown backend: {backend} → using claude_agent_sdk")
             from pocketclaw.agents.claude_sdk import ClaudeAgentSDKWrapper
+
             self._agent = ClaudeAgentSDKWrapper(self.settings)
-    
+
     async def run(self, message: str) -> AsyncIterator[dict]:
         """Run the agent with the given message.
-        
+
         Yields dicts with:
           - type: "message", "tool_use", "tool_result", "error", "done"
           - content: string content
@@ -77,10 +82,10 @@ class AgentRouter:
             yield {"type": "error", "content": "❌ No agent initialized"}
             yield {"type": "done", "content": ""}
             return
-        
+
         async for chunk in self._agent.run(message):
             yield chunk
-    
+
     async def stop(self) -> None:
         """Stop the agent."""
         if self._agent:

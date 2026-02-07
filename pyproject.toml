@@ -50,6 +50,7 @@ dependencies = [
     "openai>=1.60.0",
     "anthropic>=0.45.0",
     # Agent Backends
+    "claude-agent-sdk>=0.1.30",
     "open-interpreter>=0.2.0,<0.5.0",
     # Browser Automation (auto-installs Chromium on first use)
     "playwright>=1.50.0",
@@ -75,8 +76,20 @@ dev = [
 memory = [
     "mem0ai>=0.1.0",  # Semantic memory with vector search
 ]
+discord = [
+    "discord.py>=2.3.0",
+]
+slack = [
+    "slack-bolt>=1.20.0",
+]
+whatsapp-personal = [
+    "neonize>=0.3.0",
+]
+channels = [
+    "pocketpaw[discord,slack]",
+]
 all = [
-    "pocketpaw[memory]",
+    "pocketpaw[memory,channels,whatsapp-personal]",
 ]
 
 [project.scripts]

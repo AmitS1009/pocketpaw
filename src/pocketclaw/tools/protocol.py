@@ -10,6 +10,7 @@ from typing import Any, Protocol, Dict, List
 @dataclass
 class ToolDefinition:
     """Tool definition for LLM function calling."""
+
     name: str
     description: str
     parameters: dict[str, Any]  # JSON Schema
@@ -23,7 +24,7 @@ class ToolDefinition:
                 "name": self.name,
                 "description": self.description,
                 "parameters": self.parameters,
-            }
+            },
         }
 
     def to_anthropic_schema(self) -> dict[str, Any]:

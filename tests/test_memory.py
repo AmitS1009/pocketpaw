@@ -80,7 +80,7 @@ class TestFileMemoryStore:
         )
         entry_id = await memory_store.save(entry)
         assert entry_id
-        
+
         # Check file was created
         assert memory_store.long_term_file.exists()
         content = memory_store.long_term_file.read_text()
@@ -96,7 +96,7 @@ class TestFileMemoryStore:
             session_key="test_session",
         )
         await memory_store.save(entry)
-        
+
         # Verify session was saved
         history = await memory_store.get_session("test_session")
         assert len(history) == 1
@@ -115,11 +115,11 @@ class TestFileMemoryStore:
                 session_key="test_session",
             )
             await memory_store.save(entry)
-        
+
         # Clear session
         count = await memory_store.clear_session("test_session")
         assert count == 3
-        
+
         # Verify empty
         history = await memory_store.get_session("test_session")
         assert len(history) == 0
@@ -141,7 +141,7 @@ class TestFileMemoryStore:
         )
         await memory_store.save(entry1)
         await memory_store.save(entry2)
-        
+
         # Search
         results = await memory_store.search(query="Python")
         assert len(results) == 1
@@ -171,18 +171,18 @@ class TestMemoryManager:
     @pytest.mark.asyncio
     async def test_session_flow(self, memory_manager):
         session_key = "test:session123"
-        
+
         # Add messages
         await memory_manager.add_to_session(session_key, "user", "Hello!")
         await memory_manager.add_to_session(session_key, "assistant", "Hi there!")
         await memory_manager.add_to_session(session_key, "user", "How are you?")
-        
+
         # Get history
         history = await memory_manager.get_session_history(session_key)
         assert len(history) == 3
         assert history[0] == {"role": "user", "content": "Hello!"}
         assert history[1] == {"role": "assistant", "content": "Hi there!"}
-        
+
         # Clear
         count = await memory_manager.clear_session(session_key)
         assert count == 3
@@ -192,7 +192,7 @@ class TestMemoryManager:
         # Add some memories
         await memory_manager.remember("User prefers dark mode")
         await memory_manager.note("Working on PocketPaw today")
-        
+
         # Get context
         context = await memory_manager.get_context_for_agent()
         assert "Long-term Memory" in context or "Today's Notes" in context
@@ -205,30 +205,30 @@ class TestMemoryIntegration:
     async def test_full_workflow(self, temp_memory_path):
         """Test a realistic workflow."""
         manager = MemoryManager(base_path=temp_memory_path)
-        
+
         # 1. Store user preference
         await manager.remember(
             "User's name is Prakash",
             tags=["user", "identity"],
             header="User Identity",
         )
-        
+
         # 2. Add daily note
         await manager.note("Started working on memory system")
-        
+
         # 3. Simulate conversation
         session = "websocket:prakash"
         await manager.add_to_session(session, "user", "What's my name?")
         await manager.add_to_session(session, "assistant", "Your name is Prakash!")
-        
+
         # 4. Get agent context
         context = await manager.get_context_for_agent()
         assert "Prakash" in context
-        
+
         # 5. Get session history
         history = await manager.get_session_history(session)
         assert len(history) == 2
-        
+
         # 6. Verify files exist
         assert (temp_memory_path / "MEMORY.md").exists()
         assert (temp_memory_path / "sessions").is_dir()

@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # Skill search paths in priority order (later overrides earlier)
 SKILL_PATHS = [
-    Path.home() / ".agents" / "skills",      # From skills.sh (central)
+    Path.home() / ".agents" / "skills",  # From skills.sh (central)
     Path.home() / ".pocketclaw" / "skills",  # PocketPaw-specific
 ]
 
@@ -29,6 +29,7 @@ SKILL_PATHS = [
 @dataclass
 class Skill:
     """Represents a loaded skill."""
+
     name: str
     description: str
     content: str
@@ -80,7 +81,7 @@ def parse_skill_md(skill_path: Path) -> Optional[Skill]:
         return None
 
     # Extract YAML frontmatter between --- markers
-    match = re.match(r'^---\s*\n(.*?)\n---\s*\n(.*)$', text, re.DOTALL)
+    match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", text, re.DOTALL)
 
     if not match:
         logger.warning(f"No frontmatter found in {skill_path}")
