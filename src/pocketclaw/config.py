@@ -323,6 +323,11 @@ class Settings(BaseSettings):
     web_host: str = Field(default="127.0.0.1", description="Web server host")
     web_port: int = Field(default=8888, description="Web server port")
 
+    # Concurrency
+    max_concurrent_conversations: int = Field(
+        default=5, description="Max parallel conversations processed simultaneously"
+    )
+
     def save(self) -> None:
         """Save settings to config file.
 
@@ -462,6 +467,8 @@ class Settings(BaseSettings):
             # Generic Webhooks
             "webhook_configs": self.webhook_configs,
             "webhook_sync_timeout": self.webhook_sync_timeout,
+            # Concurrency
+            "max_concurrent_conversations": self.max_concurrent_conversations,
         }
         config_path.write_text(json.dumps(data, indent=2))
 

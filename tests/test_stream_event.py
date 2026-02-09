@@ -236,7 +236,10 @@ class TestLoopThinkingIntegration:
             patch("pocketclaw.agents.loop.get_memory_manager") as mock_mem_fn,
             patch("pocketclaw.agents.loop.AgentContextBuilder") as mock_builder_cls,
         ):
-            mock_settings.return_value = MagicMock(agent_backend="claude_agent_sdk")
+            mock_settings.return_value = MagicMock(
+                agent_backend="claude_agent_sdk",
+                max_concurrent_conversations=5,
+            )
             bus = MagicMock()
             bus.publish_system = AsyncMock()
             bus.publish_outbound = AsyncMock()
@@ -295,7 +298,10 @@ class TestLoopThinkingIntegration:
             patch("pocketclaw.agents.loop.get_memory_manager") as mock_mem_fn,
             patch("pocketclaw.agents.loop.AgentContextBuilder") as mock_builder_cls,
         ):
-            mock_settings.return_value = MagicMock(agent_backend="claude_agent_sdk")
+            mock_settings.return_value = MagicMock(
+                agent_backend="claude_agent_sdk",
+                max_concurrent_conversations=5,
+            )
             bus = MagicMock()
             bus.publish_system = AsyncMock()
             bus.publish_outbound = AsyncMock()

@@ -81,6 +81,7 @@ async def test_agent_loop_process_message(
     with patch("pocketclaw.agents.loop.get_settings") as mock_settings:
         settings = MagicMock()
         settings.agent_backend = "claude_agent_sdk"
+        settings.max_concurrent_conversations = 5
         mock_settings.return_value = settings
 
         with patch("pocketclaw.agents.loop.Settings") as mock_settings_cls:
@@ -124,6 +125,7 @@ async def test_agent_loop_reset_router(
     with patch("pocketclaw.agents.loop.get_settings") as mock_settings:
         settings = MagicMock()
         settings.agent_backend = "claude_agent_sdk"
+        settings.max_concurrent_conversations = 5
         mock_settings.return_value = settings
 
         loop = AgentLoop()
@@ -164,6 +166,7 @@ async def test_agent_loop_handles_error(
     with patch("pocketclaw.agents.loop.get_settings") as mock_settings:
         settings = MagicMock()
         settings.agent_backend = "claude_agent_sdk"
+        settings.max_concurrent_conversations = 5
         mock_settings.return_value = settings
 
         with patch("pocketclaw.agents.loop.Settings") as mock_settings_cls:
@@ -210,6 +213,7 @@ async def test_agent_loop_emits_tool_events(
     with patch("pocketclaw.agents.loop.get_settings") as mock_settings:
         settings = MagicMock()
         settings.agent_backend = "claude_agent_sdk"
+        settings.max_concurrent_conversations = 5
         mock_settings.return_value = settings
 
         with patch("pocketclaw.agents.loop.Settings") as mock_settings_cls:
@@ -282,6 +286,7 @@ async def test_agent_loop_builds_context_and_passes_to_router(
     with patch("pocketclaw.agents.loop.get_settings") as mock_settings:
         settings = MagicMock()
         settings.agent_backend = "claude_agent_sdk"
+        settings.max_concurrent_conversations = 5
         mock_settings.return_value = settings
 
         with patch("pocketclaw.agents.loop.Settings") as mock_settings_cls:

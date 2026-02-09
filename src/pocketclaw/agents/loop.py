@@ -45,6 +45,10 @@ class AgentLoop:
         # Agent Router handles backend selection
         self._router: AgentRouter | None = None
 
+        # Concurrency controls
+        self._session_locks: dict[str, asyncio.Lock] = {}
+        self._global_semaphore = asyncio.Semaphore(self.settings.max_concurrent_conversations)
+
         self._running = False
 
     def _get_router(self) -> AgentRouter:
@@ -83,6 +87,18 @@ class AgentLoop:
         session_key = message.session_key
         logger.info(f"⚡ Processing message from {session_key}")
 
+        # Global concurrency limit — blocks until a slot is available
+        async with self._global_semaphore:
+            # Per-session lock — serializes messages within the same session
+            if session_key not in self._session_locks:
+                self._session_locks[session_key] = asyncio.Lock()
+            async with self._session_locks[session_key]:
+                await self._process_message_inner(message, session_key)
+
+    async def _process_message_inner(
+        self, message: InboundMessage, session_key: str
+    ) -> None:
+        """Inner message processing (called under concurrency guards)."""
         # Keep context_builder in sync if memory manager was hot-reloaded
         if self.context_builder.memory is not self.memory:
             self.context_builder.memory = self.memory

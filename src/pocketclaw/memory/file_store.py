@@ -7,6 +7,7 @@
 # - ~/.pocketclaw/memory/2026-02-02.md (daily)
 # - ~/.pocketclaw/memory/sessions/     (session JSON files)
 
+import asyncio
 import json
 import re
 import uuid
@@ -161,6 +162,7 @@ class FileMemoryStore:
 
         # In-memory index for fast lookup
         self._index: dict[str, MemoryEntry] = {}
+        self._session_write_locks: dict[str, asyncio.Lock] = {}
         self._load_index()
 
     def _load_index(self) -> None:
@@ -269,29 +271,34 @@ class FileMemoryStore:
         if not entry.session_key:
             return
 
-        session_file = self._get_session_file(entry.session_key)
+        # Per-session lock to prevent concurrent read-modify-write corruption
+        if entry.session_key not in self._session_write_locks:
+            self._session_write_locks[entry.session_key] = asyncio.Lock()
 
-        # Load existing session
-        session_data = []
-        if session_file.exists():
-            try:
-                session_data = json.loads(session_file.read_text())
-            except json.JSONDecodeError:
-                pass
+        async with self._session_write_locks[entry.session_key]:
+            session_file = self._get_session_file(entry.session_key)
 
-        # Append new entry
-        session_data.append(
-            {
-                "id": entry.id,
-                "role": entry.role,
-                "content": entry.content,
-                "timestamp": entry.created_at.isoformat(),
-                "metadata": entry.metadata,
-            }
-        )
+            # Load existing session
+            session_data = []
+            if session_file.exists():
+                try:
+                    session_data = json.loads(session_file.read_text())
+                except json.JSONDecodeError:
+                    pass
 
-        # Save back
-        session_file.write_text(json.dumps(session_data, indent=2))
+            # Append new entry
+            session_data.append(
+                {
+                    "id": entry.id,
+                    "role": entry.role,
+                    "content": entry.content,
+                    "timestamp": entry.created_at.isoformat(),
+                    "metadata": entry.metadata,
+                }
+            )
+
+            # Save back
+            session_file.write_text(json.dumps(session_data, indent=2))
 
     async def get(self, entry_id: str) -> MemoryEntry | None:
         """Get a memory entry by ID."""

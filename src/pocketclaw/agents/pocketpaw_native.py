@@ -23,7 +23,7 @@ import re
 from pathlib import Path
 from typing import AsyncIterator, Optional
 
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic
 
 from pocketclaw.config import Settings
 from pocketclaw.agents.protocol import AgentEvent
@@ -326,7 +326,7 @@ class PocketPawOrchestrator:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self._client: Optional[Anthropic] = None
+        self._client: Optional[AsyncAnthropic] = None
         self._executor = None
         self._stop_flag = False
         self._file_jail = settings.file_jail_path.resolve()
@@ -344,7 +344,7 @@ class PocketPawOrchestrator:
             logger.error("❌ Anthropic API key required for PocketPaw Native")
             return
 
-        self._client = Anthropic(api_key=self.settings.anthropic_api_key)
+        self._client = AsyncAnthropic(api_key=self.settings.anthropic_api_key)
 
         # Initialize executor (Open Interpreter)
         try:
@@ -750,7 +750,7 @@ class PocketPawOrchestrator:
                 final_system = identity + "\n" + _TOOL_GUIDE
 
                 # Call Claude
-                response = self._client.messages.create(
+                response = await self._client.messages.create(
                     model=model,
                     max_tokens=4096,
                     system=final_system,
