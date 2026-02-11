@@ -111,7 +111,28 @@ def main() -> int:
         action="store_true",
         help="Run interactive uninstaller and exit",
     )
+    # Dev/testing flags — install from git or local source instead of PyPI
+    parser.add_argument(
+        "--dev",
+        action="store_true",
+        help="Install from the 'dev' branch (shortcut for --branch dev)",
+    )
+    parser.add_argument(
+        "--branch",
+        default=None,
+        help="Install from a specific git branch (e.g. --branch dev)",
+    )
+    parser.add_argument(
+        "--local",
+        default=None,
+        metavar="PATH",
+        help="Install from a local directory in editable mode (e.g. --local /path/to/pocketpaw)",
+    )
     args = parser.parse_args()
+
+    # Resolve --dev as shortcut for --branch dev
+    if args.dev and not args.branch:
+        args.branch = "dev"
 
     logger.info("PocketPaw Desktop Launcher starting")
 
@@ -152,11 +173,14 @@ def main() -> int:
     bootstrap = Bootstrap()
     status = bootstrap.check_status()
 
-    if status.needs_install:
-        logger.info("First run detected — starting bootstrap")
+    if status.needs_install or args.branch or args.local:
+        reason = "First run" if status.needs_install else "Dev/branch install"
+        logger.info("%s detected — starting bootstrap", reason)
         success = _first_run_install(
             bootstrap,
             extras=args.extras.split(",") if args.extras else ["recommended"],
+            branch=args.branch,
+            local_path=args.local,
         )
         if not success:
             logger.error("Bootstrap failed")
@@ -200,6 +224,8 @@ def main() -> int:
 def _first_run_install(
     bootstrap: Bootstrap,
     extras: list[str],
+    branch: str | None = None,
+    local_path: str | None = None,
 ) -> bool:
     """Run the first-time installation with a splash screen."""
     # Try to use the tkinter splash window
@@ -208,15 +234,10 @@ def _first_run_install(
 
         splash = SplashWindow()
 
-        def install_fn(progress_cb):
-            result = bootstrap.run(extras=extras)
-            if result.error:
-                raise RuntimeError(result.error)
-
         # Patch bootstrap to use splash's progress callback
         def run_with_splash(progress_cb):
             bootstrap.progress = progress_cb
-            result = bootstrap.run(extras=extras)
+            result = bootstrap.run(extras=extras, branch=branch, local_path=local_path)
             if result.error:
                 raise RuntimeError(result.error)
 
@@ -231,7 +252,7 @@ def _first_run_install(
             print(f"  [{pct:3d}%] {msg}")
 
         bootstrap.progress = console_progress
-        result = bootstrap.run(extras=extras)
+        result = bootstrap.run(extras=extras, branch=branch, local_path=local_path)
         if result.error:
             print(f"\n  Error: {result.error}\n")
             return False

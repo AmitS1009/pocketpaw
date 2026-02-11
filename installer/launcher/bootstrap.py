@@ -25,7 +25,11 @@ VENV_DIR = POCKETCLAW_HOME / "venv"
 UV_DIR = POCKETCLAW_HOME / "uv"
 EMBEDDED_PYTHON_DIR = POCKETCLAW_HOME / "python"
 PACKAGE_NAME = "pocketpaw"
+GIT_REPO_URL = "https://github.com/pocketpaw/pocketpaw.git"
 MIN_PYTHON = (3, 11)
+
+# Dev mode marker file — when present, updater knows to skip PyPI checks
+DEV_MODE_MARKER = POCKETCLAW_HOME / ".dev-mode"
 
 # Python embeddable package URL template for Windows
 # Format: python-{version}-embed-{arch}.zip
@@ -163,11 +167,18 @@ class Bootstrap:
 
         return status
 
-    def run(self, extras: list[str] | None = None) -> BootstrapStatus:
+    def run(
+        self,
+        extras: list[str] | None = None,
+        branch: str | None = None,
+        local_path: str | None = None,
+    ) -> BootstrapStatus:
         """Full bootstrap: find/install Python, get uv, create venv, install pocketpaw.
 
         Args:
             extras: pip extras to install (e.g. ["telegram", "discord"])
+            branch: git branch to install from (e.g. "dev"). Installs from git instead of PyPI.
+            local_path: local directory to install from (editable mode). Overrides branch.
 
         Returns:
             BootstrapStatus with the result.
@@ -213,11 +224,27 @@ class Bootstrap:
             status.venv_exists = True
 
             # Step 4: Install pocketpaw
-            self.progress("Installing PocketPaw...", 45)
-            install_err = self._install_pocketpaw(str(venv_python), extras, uv)
+            source_label = "PocketPaw"
+            if local_path:
+                source_label = f"PocketPaw (local: {local_path})"
+            elif branch:
+                source_label = f"PocketPaw (branch: {branch})"
+            self.progress(f"Installing {source_label}...", 45)
+            install_err = self._install_pocketpaw(
+                str(venv_python), extras, uv, branch=branch, local_path=local_path,
+            )
             if install_err:
                 status.error = install_err
                 return status
+
+            # Write dev mode marker so updater knows to skip PyPI
+            if branch or local_path:
+                DEV_MODE_MARKER.write_text(
+                    f"branch={branch or ''}\nlocal={local_path or ''}\n",
+                    encoding="utf-8",
+                )
+            elif DEV_MODE_MARKER.exists():
+                DEV_MODE_MARKER.unlink()
 
             self.progress("Verifying installation...", 90)
             version = self._get_installed_version(str(venv_python), uv)
@@ -483,26 +510,44 @@ class Bootstrap:
         venv_python: str,
         extras: list[str],
         uv: str | None = None,
+        branch: str | None = None,
+        local_path: str | None = None,
     ) -> str | None:
         """Install pocketpaw into the venv with given extras.
 
         Uses uv if available (10-100x faster), falls back to pip.
 
+        Args:
+            venv_python: path to the venv Python executable.
+            extras: pip extras to install (e.g. ["telegram", "discord"]).
+            uv: path to the uv binary (None to use pip).
+            branch: git branch to install from (e.g. "dev").
+            local_path: local directory to install from (editable mode).
+
         Returns:
             None on success, or an error message string on failure.
         """
-        if extras:
-            pkg = f"{PACKAGE_NAME}[{','.join(extras)}]"
-        else:
-            pkg = PACKAGE_NAME
+        extras_suffix = f"[{','.join(extras)}]" if extras else ""
 
-        logger.info("Installing %s (using %s)", pkg, "uv" if uv else "pip")
+        if local_path:
+            # Editable install from local path
+            pkg = f"{local_path}{extras_suffix}"
+            logger.info("Installing %s from local path (editable)", pkg)
+        elif branch:
+            # Install from git branch
+            pkg = f"{PACKAGE_NAME}{extras_suffix} @ git+{GIT_REPO_URL}@{branch}"
+            logger.info("Installing %s from git branch '%s'", PACKAGE_NAME, branch)
+        else:
+            # Standard PyPI install
+            pkg = f"{PACKAGE_NAME}{extras_suffix}"
+            logger.info("Installing %s from PyPI", pkg)
         self.progress(f"Installing {pkg}...", 50)
+        editable = bool(local_path)
 
         try:
             if uv:
-                return self._install_with_uv(uv, venv_python, pkg)
-            return self._install_with_pip(venv_python, pkg)
+                return self._install_with_uv(uv, venv_python, pkg, editable=editable)
+            return self._install_with_pip(venv_python, pkg, editable=editable)
         except subprocess.TimeoutExpired:
             logger.error("Install timed out after 10 minutes")
             return "Installation timed out after 10 minutes. Try again with a faster connection."
@@ -510,23 +555,21 @@ class Bootstrap:
             logger.error("Executable not found: %s", exc)
             return f"Executable not found: {exc}"
 
-    def _install_with_uv(self, uv: str, venv_python: str, pkg: str) -> str | None:
+    def _install_with_uv(
+        self, uv: str, venv_python: str, pkg: str, editable: bool = False,
+    ) -> str | None:
         """Install a package using uv pip install with dependency overrides."""
         # Write overrides file so uv can loosen transitive pins
         # (e.g. open-interpreter pins tiktoken==0.7.0 which has no cp313 wheel)
         overrides_file = POCKETCLAW_HOME / "uv-overrides.txt"
         overrides_file.write_text("\n".join(UV_OVERRIDES) + "\n", encoding="utf-8")
 
-        cmd = [
-            uv,
-            "pip",
-            "install",
-            pkg,
-            "--python",
-            venv_python,
-            "--override",
-            str(overrides_file),
-        ]
+        cmd = [uv, "pip", "install"]
+        if editable:
+            cmd.extend(["-e", pkg])
+        else:
+            cmd.append(pkg)
+        cmd.extend(["--python", venv_python, "--override", str(overrides_file)])
         logger.info("Running: %s", " ".join(cmd))
 
         result = subprocess.run(
@@ -544,8 +587,14 @@ class Bootstrap:
         # Retry without overrides in case the override itself caused the issue
         logger.info("Retrying uv pip install without overrides")
         self.progress("Retrying install...", 55)
+        retry_cmd = [uv, "pip", "install"]
+        if editable:
+            retry_cmd.extend(["-e", pkg])
+        else:
+            retry_cmd.append(pkg)
+        retry_cmd.extend(["--python", venv_python])
         result2 = subprocess.run(
-            [uv, "pip", "install", pkg, "--python", venv_python],
+            retry_cmd,
             capture_output=True,
             text=True,
             timeout=600,
@@ -559,9 +608,11 @@ class Bootstrap:
         # Fallback to pip
         logger.info("Falling back to pip")
         self.progress("Retrying install with pip...", 60)
-        return self._install_with_pip(venv_python, pkg)
+        return self._install_with_pip(venv_python, pkg, editable=editable)
 
-    def _install_with_pip(self, venv_python: str, pkg: str) -> str | None:
+    def _install_with_pip(
+        self, venv_python: str, pkg: str, editable: bool = False,
+    ) -> str | None:
         """Install a package using pip (fallback)."""
         # Make sure pip is up to date first
         subprocess.run(
@@ -570,8 +621,14 @@ class Bootstrap:
             timeout=120,
         )
 
+        cmd = [venv_python, "-m", "pip", "install"]
+        if editable:
+            cmd.extend(["-e", pkg])
+        else:
+            cmd.append(pkg)
+        cmd.append("--quiet")
         result = subprocess.run(
-            [venv_python, "-m", "pip", "install", pkg, "--quiet"],
+            cmd,
             capture_output=True,
             text=True,
             timeout=600,

@@ -22,6 +22,8 @@ VENV_DIR = POCKETCLAW_HOME / "venv"
 UV_DIR = POCKETCLAW_HOME / "uv"
 PACKAGE_NAME = "pocketpaw"
 PYPI_URL = f"https://pypi.org/pypi/{PACKAGE_NAME}/json"
+GIT_REPO_URL = "https://github.com/pocketpaw/pocketpaw.git"
+DEV_MODE_MARKER = POCKETCLAW_HOME / ".dev-mode"
 
 StatusCallback = Callable[[str], None]
 
@@ -37,6 +39,8 @@ class UpdateInfo:
     current_version: str | None = None
     latest_version: str | None = None
     update_available: bool = False
+    dev_mode: bool = False
+    dev_branch: str | None = None
     error: str | None = None
 
 
@@ -46,9 +50,34 @@ class Updater:
     def __init__(self, on_status: StatusCallback | None = None) -> None:
         self.on_status = on_status or _noop_status
 
+    def is_dev_mode(self) -> bool:
+        """Check if the launcher is running in dev/branch mode."""
+        return DEV_MODE_MARKER.exists()
+
+    def _read_dev_branch(self) -> str | None:
+        """Read the branch name from the dev mode marker file."""
+        if not DEV_MODE_MARKER.exists():
+            return None
+        try:
+            for line in DEV_MODE_MARKER.read_text(encoding="utf-8").splitlines():
+                if line.startswith("branch=") and line.split("=", 1)[1]:
+                    return line.split("=", 1)[1]
+        except OSError:
+            pass
+        return None
+
     def check(self) -> UpdateInfo:
-        """Check if a newer version is available on PyPI."""
+        """Check if a newer version is available on PyPI (or git for dev mode)."""
         info = UpdateInfo()
+
+        # Detect dev mode
+        if self.is_dev_mode():
+            info.dev_mode = True
+            info.dev_branch = self._read_dev_branch()
+            info.current_version = self._get_installed_version()
+            # In dev mode, always offer "re-pull from branch" instead of PyPI check
+            info.update_available = True
+            return info
 
         # Get current version from venv
         info.current_version = self._get_installed_version()
@@ -68,15 +97,26 @@ class Updater:
         return info
 
     def apply(self) -> bool:
-        """Upgrade pocketpaw in the venv to the latest version."""
+        """Upgrade pocketpaw in the venv to the latest version (PyPI or git branch)."""
         python = self._venv_python()
         if not python.exists():
             self.on_status("PocketPaw not installed")
             return False
 
+        uv = self._find_uv()
+
+        # Dev mode: reinstall from git branch
+        if self.is_dev_mode():
+            branch = self._read_dev_branch()
+            if branch:
+                self.on_status(f"Pulling latest from branch '{branch}'...")
+                return self._update_from_branch(python, uv, branch)
+            # Local mode — user should re-run with --local
+            self.on_status("Local dev mode — run launcher with --local to update")
+            return False
+
         self.on_status("Updating PocketPaw...")
 
-        uv = self._find_uv()
         try:
             if uv:
                 logger.info("Running uv pip install --upgrade %s", PACKAGE_NAME)
@@ -106,6 +146,37 @@ class Updater:
             else:
                 logger.error("Update failed: %s", result.stderr[-1000:])
                 self.on_status("Update failed. Check logs.")
+                return False
+        except subprocess.TimeoutExpired:
+            self.on_status("Update timed out")
+            return False
+
+    def _update_from_branch(self, python: Path, uv: str | None, branch: str) -> bool:
+        """Re-install pocketpaw from a git branch (force-reinstall to pick up new commits)."""
+        pkg = f"{PACKAGE_NAME} @ git+{GIT_REPO_URL}@{branch}"
+        logger.info("Updating from git branch '%s'", branch)
+
+        try:
+            if uv:
+                cmd = [
+                    uv, "pip", "install", "--reinstall", pkg,
+                    "--python", str(python),
+                ]
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, timeout=300,
+                )
+            else:
+                result = subprocess.run(
+                    [str(python), "-m", "pip", "install", "--force-reinstall", pkg, "--quiet"],
+                    capture_output=True, text=True, timeout=300,
+                )
+            if result.returncode == 0:
+                new_ver = self._get_installed_version()
+                self.on_status(f"Updated to {branch} (v{new_ver})")
+                return True
+            else:
+                logger.error("Branch update failed: %s", result.stderr[-1000:])
+                self.on_status(f"Update from {branch} failed. Check logs.")
                 return False
         except subprocess.TimeoutExpired:
             self.on_status("Update timed out")
