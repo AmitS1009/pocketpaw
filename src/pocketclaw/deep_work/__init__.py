@@ -79,7 +79,7 @@ async def start_deep_work(user_input: str, research_depth: str = "standard") -> 
 
     Args:
         user_input: Natural language project description.
-        research_depth: How thorough to research — "quick", "standard", or "deep".
+        research_depth: "none" (skip), "quick", "standard", or "deep".
 
     Returns:
         The created Project (status=AWAITING_APPROVAL after planning).

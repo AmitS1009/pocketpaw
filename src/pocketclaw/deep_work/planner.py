@@ -1,7 +1,7 @@
 # Deep Work Planner — orchestrates 4-phase project planning via LLM.
 # Created: 2026-02-12
-# Updated: 2026-02-12 — Added research_depth parameter (quick/standard/deep)
-#   to control how thorough the research phase is.
+# Updated: 2026-02-12 — Added research_depth parameter (none/quick/standard/deep).
+#   'none' skips research entirely (no LLM call), passing empty notes to PRD.
 #
 # PlannerAgent runs research, PRD generation, task breakdown, and team
 # assembly through AgentRouter, producing a PlannerResult that can be
@@ -72,24 +72,28 @@ class PlannerAgent:
         Args:
             project_description: Natural language project description.
             project_id: ID of the project being planned.
-            research_depth: How thorough to research — "quick", "standard",
-                or "deep". Quick skips heavy web search, deep does extensive
-                web search and analysis.
+            research_depth: How thorough to research — "none" (skip entirely),
+                "quick", "standard", or "deep". None skips the research
+                LLM call entirely, passing empty notes to subsequent phases.
 
         Broadcasts SystemEvents for each phase so the frontend can show
         progress (e.g. spinner text).
         """
         # Phase 1: Research (depth controls prompt and thoroughness)
-        self._broadcast_phase(project_id, "research")
-        research_prompts = {
-            "quick": RESEARCH_PROMPT_QUICK,
-            "standard": RESEARCH_PROMPT,
-            "deep": RESEARCH_PROMPT_DEEP,
-        }
-        prompt_template = research_prompts.get(research_depth, RESEARCH_PROMPT)
-        research = await self._run_prompt(
-            prompt_template.format(project_description=project_description)
-        )
+        if research_depth == "none":
+            # Skip research entirely — no LLM call
+            research = ""
+        else:
+            self._broadcast_phase(project_id, "research")
+            research_prompts = {
+                "quick": RESEARCH_PROMPT_QUICK,
+                "standard": RESEARCH_PROMPT,
+                "deep": RESEARCH_PROMPT_DEEP,
+            }
+            prompt_template = research_prompts.get(research_depth, RESEARCH_PROMPT)
+            research = await self._run_prompt(
+                prompt_template.format(project_description=project_description)
+            )
 
         # Phase 2: PRD
         self._broadcast_phase(project_id, "prd")

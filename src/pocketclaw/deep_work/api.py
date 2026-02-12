@@ -1,6 +1,7 @@
 # Deep Work API endpoints.
 # Created: 2026-02-12
-# Updated: 2026-02-12 — Added execution_levels + task_level_map to get_plan().
+# Updated: 2026-02-12 — Added 'none' option to research_depth (skip research entirely).
+#   Added execution_levels + task_level_map to get_plan().
 #   Added POST /projects/{id}/tasks/{task_id}/skip endpoint for skipping tasks.
 #   Added research_depth parameter to start endpoint.
 #
@@ -33,7 +34,7 @@ class StartDeepWorkRequest(BaseModel):
     )
     research_depth: str = Field(
         default="standard",
-        description="Research thoroughness: 'quick' (skip heavy search), 'standard', or 'deep' (extensive search)",
+        description="Research thoroughness: 'none' (skip entirely), 'quick', 'standard', or 'deep'",
     )
 
 

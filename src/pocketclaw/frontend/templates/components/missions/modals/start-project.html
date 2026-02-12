@@ -2,7 +2,8 @@
   PocketPaw - Start Deep Work Project Modal
 
   Created: 2026-02-12
-  Updated: 2026-02-12 — Added research depth selector (Quick/Standard/Deep).
+  Updated: 2026-02-12 — Added 'None' option to research depth (skip research entirely).
+    Research depth selector: None / Quick / Standard / Deep.
 
   Natural language input modal for starting a new Deep Work project.
   User describes what they want to build, the planner takes over.
@@ -65,6 +66,18 @@
             <div>
                 <label class="block text-[10px] text-white/40 uppercase tracking-wider mb-2 font-semibold">Research Depth</label>
                 <div class="flex gap-2">
+                    <button
+                        class="flex-1 flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border text-center transition-all"
+                        :class="missionControl.researchDepth === 'none'
+                            ? 'bg-white/10 border-white/30 text-white/80'
+                            : 'bg-white/[0.02] border-white/10 text-white/40 hover:border-white/20 hover:text-white/60'"
+                        @click="missionControl.researchDepth = 'none'"
+                        :disabled="missionControl.projectStarting"
+                    >
+                        <i data-lucide="circle-off" class="w-4 h-4"></i>
+                        <span class="text-xs font-medium">None</span>
+                        <span class="text-[9px] opacity-60">Skip research</span>
+                    </button>
                     <button
                         class="flex-1 flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border text-center transition-all"
                         :class="missionControl.researchDepth === 'quick'
