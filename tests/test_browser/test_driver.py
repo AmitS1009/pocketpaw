@@ -3,8 +3,10 @@
 # Fixed mocking for async_playwright().start() pattern
 """Tests for browser driver module."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from pocketclaw.browser.driver import BrowserDriver
 from pocketclaw.browser.snapshot import RefMap
 

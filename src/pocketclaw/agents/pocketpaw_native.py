@@ -21,13 +21,13 @@ Changes:
 import asyncio
 import logging
 import re
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import AsyncIterator, Optional
 
 from anthropic import AsyncAnthropic
 
-from pocketclaw.config import Settings
 from pocketclaw.agents.protocol import AgentEvent
+from pocketclaw.config import Settings
 from pocketclaw.tools.policy import ToolPolicy
 
 logger = logging.getLogger(__name__)
@@ -327,7 +327,7 @@ class PocketPawOrchestrator:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self._client: Optional[AsyncAnthropic] = None
+        self._client: AsyncAnthropic | None = None
         self._executor = None
         self._stop_flag = False
         self._file_jail = settings.file_jail_path.resolve()
@@ -422,7 +422,7 @@ class PocketPawOrchestrator:
     # SECURITY METHODS
     # =========================================================================
 
-    def _is_dangerous_command(self, command: str) -> Optional[str]:
+    def _is_dangerous_command(self, command: str) -> str | None:
         """Check if a command matches dangerous patterns using regex."""
         for pattern in DANGEROUS_PATTERNS:
             if re.search(pattern, command, re.IGNORECASE):
@@ -574,7 +574,7 @@ class PocketPawOrchestrator:
                 if self._executor:
                     content = await self._executor.read_file(path)
                 else:
-                    with open(Path(path).expanduser(), "r") as f:
+                    with open(Path(path).expanduser()) as f:
                         content = f.read()
 
                 # Security: redact secrets from file content
@@ -772,7 +772,7 @@ class PocketPawOrchestrator:
                         ),
                         timeout=90.0,  # Additional asyncio timeout as safety net
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield AgentEvent(
                         type="error",
                         content="⏱️ Request timed out. Please check your network connection and API key.",

@@ -3,9 +3,9 @@
 # Updated: 2026-02-04 - Added Mem0 backend support
 # Provides session persistence, long-term memory, and daily notes.
 
-from pocketclaw.memory.protocol import MemoryType, MemoryEntry, MemoryStoreProtocol
 from pocketclaw.memory.file_store import FileMemoryStore
-from pocketclaw.memory.manager import MemoryManager, get_memory_manager, create_memory_store
+from pocketclaw.memory.manager import MemoryManager, create_memory_store, get_memory_manager
+from pocketclaw.memory.protocol import MemoryEntry, MemoryStoreProtocol, MemoryType
 
 # Mem0 store is optional - requires mem0ai package
 try:

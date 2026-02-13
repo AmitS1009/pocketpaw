@@ -4,8 +4,9 @@ Created: 2026-02-02
 Changes: 2026-02-02 - Added ExecutorProtocol and OrchestratorProtocol for 2-layer architecture.
 """
 
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Protocol, Optional
+from typing import Any, Protocol
 
 
 @dataclass

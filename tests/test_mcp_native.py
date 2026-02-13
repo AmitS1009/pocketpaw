@@ -6,8 +6,6 @@ All MCP imports are mocked.
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from pocketclaw.agents.pocketpaw_native import PocketPawOrchestrator
 from pocketclaw.config import Settings
 from pocketclaw.mcp.manager import MCPManager, MCPToolInfo
@@ -52,8 +50,8 @@ class TestMCPToolDiscovery:
         orch = _make_orchestrator()
         mgr = MCPManager()
         # Inject fake tools via internal state
-        from pocketclaw.mcp.manager import _ServerState
         from pocketclaw.mcp.config import MCPServerConfig
+        from pocketclaw.mcp.manager import _ServerState
 
         state = _ServerState(
             config=MCPServerConfig(name="fs"),
@@ -80,8 +78,8 @@ class TestMCPToolDiscovery:
     def test_mcp_tools_filtered_by_policy(self):
         orch = _make_orchestrator(tools_deny=["mcp:fs:*"])
         mgr = MCPManager()
-        from pocketclaw.mcp.manager import _ServerState
         from pocketclaw.mcp.config import MCPServerConfig
+        from pocketclaw.mcp.manager import _ServerState
 
         state = _ServerState(
             config=MCPServerConfig(name="fs"),
@@ -97,8 +95,8 @@ class TestMCPToolDiscovery:
     def test_get_filtered_tools_includes_mcp(self):
         orch = _make_orchestrator()
         mgr = MCPManager()
-        from pocketclaw.mcp.manager import _ServerState
         from pocketclaw.mcp.config import MCPServerConfig
+        from pocketclaw.mcp.manager import _ServerState
 
         state = _ServerState(
             config=MCPServerConfig(name="gh"),
@@ -137,8 +135,8 @@ class TestMCPToolExecution:
     async def test_execute_mcp_tool(self):
         orch = _make_orchestrator()
         mgr = MCPManager()
-        from pocketclaw.mcp.manager import _ServerState
         from pocketclaw.mcp.config import MCPServerConfig
+        from pocketclaw.mcp.manager import _ServerState
 
         mock_session = AsyncMock()
         block = SimpleNamespace(text="file contents here")

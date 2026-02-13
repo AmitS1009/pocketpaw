@@ -9,7 +9,7 @@ Changes:
 """
 
 import logging
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from pocketclaw.config import Settings
 

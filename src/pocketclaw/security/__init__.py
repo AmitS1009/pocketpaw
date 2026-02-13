@@ -1,4 +1,4 @@
-from pocketclaw.security.audit import AuditLogger, AuditEvent, AuditSeverity, get_audit_logger
+from pocketclaw.security.audit import AuditEvent, AuditLogger, AuditSeverity, get_audit_logger
 from pocketclaw.security.guardian import GuardianAgent, get_guardian
 
 __all__ = [

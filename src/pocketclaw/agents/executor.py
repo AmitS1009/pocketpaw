@@ -90,7 +90,7 @@ class OpenInterpreterExecutor:
                     proc.communicate(),
                     timeout=60.0,  # 60 second timeout
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 proc.kill()
                 return "Error: Command timed out after 60 seconds"
 
@@ -151,7 +151,7 @@ class OpenInterpreterExecutor:
 
         try:
             # Direct file read - no need for interpreter
-            with open(path, "r") as f:
+            with open(path) as f:
                 return f.read()
         except Exception as e:
             logger.error(f"File read error: {e}")

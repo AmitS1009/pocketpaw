@@ -258,6 +258,7 @@ class TestSkillsRESTEndpoints:
             # Make wait_for actually call the coroutine
             async def passthrough(coro, timeout):
                 return await coro
+
             mock_asyncio.wait_for = passthrough
 
             # Prepare a fake cloned repo with a skill inside skills/ subdir
@@ -291,9 +292,7 @@ class TestSkillsRESTEndpoints:
         request.json = AsyncMock(return_value={"source": "owner/bad-repo/skill"})
 
         mock_proc = AsyncMock()
-        mock_proc.communicate = AsyncMock(
-            return_value=(b"", b"fatal: repository not found\n")
-        )
+        mock_proc.communicate = AsyncMock(return_value=(b"", b"fatal: repository not found\n"))
         mock_proc.returncode = 128
 
         with (
@@ -305,6 +304,7 @@ class TestSkillsRESTEndpoints:
 
             async def passthrough(coro, timeout):
                 return await coro
+
             mock_asyncio.wait_for = passthrough
 
             from pocketclaw.dashboard import install_skill

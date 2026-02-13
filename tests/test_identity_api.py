@@ -166,9 +166,7 @@ class TestSaveIdentity:
             base = Path(tmpdir)
 
             request = MagicMock()
-            request.json = AsyncMock(
-                return_value={"user_file": "Name: New User"}
-            )
+            request.json = AsyncMock(return_value={"user_file": "Name: New User"})
 
             with patch("pocketclaw.dashboard.get_config_path") as mock_path:
                 mock_path.return_value = base / "config.json"

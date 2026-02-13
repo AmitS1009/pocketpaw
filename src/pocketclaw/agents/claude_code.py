@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
 
 from pocketclaw.config import Settings
 from pocketclaw.tools.screenshot import take_screenshot

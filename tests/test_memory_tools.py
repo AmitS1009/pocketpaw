@@ -2,16 +2,15 @@
 # Created: 2026-02-05
 # Tests for RememberTool, RecallTool, and session list API
 
-import pytest
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import patch
 
-from pocketclaw.tools.builtin.memory import RememberTool, RecallTool
-from pocketclaw.memory.manager import MemoryManager, get_memory_manager
-from pocketclaw.memory.protocol import MemoryType, MemoryEntry
-from pocketclaw.memory.file_store import FileMemoryStore
+import pytest
+
+from pocketclaw.memory.manager import MemoryManager
+from pocketclaw.tools.builtin.memory import RecallTool, RememberTool
 
 
 @pytest.fixture
@@ -445,7 +444,7 @@ class TestMemoryToolRegistration:
 
     def test_tools_importable(self):
         """Test that memory tools can be imported from builtin package."""
-        from pocketclaw.tools.builtin import RememberTool, RecallTool
+        from pocketclaw.tools.builtin import RecallTool, RememberTool
 
         assert RememberTool is not None
         assert RecallTool is not None
@@ -459,8 +458,8 @@ class TestMemoryToolRegistration:
 
     def test_tools_work_with_registry(self, mock_memory_manager):
         """Test that tools work with ToolRegistry."""
+        from pocketclaw.tools.builtin.memory import RecallTool, RememberTool
         from pocketclaw.tools.registry import ToolRegistry
-        from pocketclaw.tools.builtin.memory import RememberTool, RecallTool
 
         registry = ToolRegistry()
         registry.register(RememberTool())

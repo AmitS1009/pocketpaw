@@ -1,7 +1,8 @@
 import asyncio
 import logging
-from pocketclaw.config import get_settings
+
 from pocketclaw.agents.open_interpreter import OpenInterpreterAgent
+from pocketclaw.config import get_settings
 
 logging.basicConfig(level=logging.INFO)
 

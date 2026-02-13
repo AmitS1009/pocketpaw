@@ -1,8 +1,9 @@
 """Unit tests for PocketPaw tools."""
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+
+import pytest
 
 
 class TestStatusTool:
@@ -66,8 +67,9 @@ class TestFetchTool:
 
     def test_get_directory_keyboard_returns_markup(self, tmp_path):
         """Should return InlineKeyboardMarkup."""
-        from pocketclaw.tools.fetch import get_directory_keyboard
         from telegram import InlineKeyboardMarkup
+
+        from pocketclaw.tools.fetch import get_directory_keyboard
 
         # Create some test files
         (tmp_path / "file1.txt").write_text("test")
@@ -154,7 +156,7 @@ class TestConfig:
 
     def test_settings_save_and_load(self, tmp_path, monkeypatch):
         """Settings should persist to disk."""
-        from pocketclaw.config import Settings, get_config_path
+        from pocketclaw.config import Settings
 
         # Mock config path to use temp directory
         config_file = tmp_path / "config.json"
@@ -235,8 +237,8 @@ class TestAgentRouter:
 
     def test_router_defaults_to_open_interpreter(self):
         """Should default to Open Interpreter."""
-        from pocketclaw.config import Settings
         from pocketclaw.agents.router import AgentRouter
+        from pocketclaw.config import Settings
 
         settings = Settings(agent_backend="open_interpreter")
         router = AgentRouter(settings)
@@ -245,8 +247,8 @@ class TestAgentRouter:
 
     def test_router_switches_to_claude_code(self):
         """Should switch to Claude Code when configured."""
-        from pocketclaw.config import Settings
         from pocketclaw.agents.router import AgentRouter
+        from pocketclaw.config import Settings
 
         settings = Settings(agent_backend="claude_code", anthropic_api_key="test")
         router = AgentRouter(settings)

@@ -131,9 +131,7 @@ class MCPManager:
                     # asyncio.wait_for cancels the task on timeout, which disrupts
                     # anyio's cancel scope cleanup and causes TaskGroup errors.
                     # Instead, run with a manual timeout that doesn't cancel the task.
-                    await self._connect_remote_with_timeout(
-                        state, timeout, self._connect_sse
-                    )
+                    await self._connect_remote_with_timeout(state, timeout, self._connect_sse)
                 else:
                     state.error = f"Unknown transport: {config.transport}"
                     logger.error(state.error)
